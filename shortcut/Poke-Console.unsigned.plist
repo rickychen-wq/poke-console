@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
   <key>WFWorkflowName</key>
-  <string>Poké Console</string>
+  <string>Poké Console v2</string>
   <key>WFWorkflowClientVersion</key>
   <string>2600.0.0</string>
   <key>WFWorkflowMinimumClientVersion</key>
@@ -72,19 +72,27 @@
         <string>^[0-9]{3,60000}$</string>
         <key>WFMatchTextCaseSensitive</key>
         <true/>
-        <key>WFInput</key>
+        <key>text</key>
         <dict>
           <key>Value</key>
           <dict>
-            <key>Type</key>
-            <string>ActionOutput</string>
-            <key>OutputUUID</key>
-            <string>6657B5E0-CA02-4E3D-A3F8-336D0FC136A1</string>
-            <key>OutputName</key>
-            <string>Clipboard</string>
+            <key>string</key>
+            <string>￼</string>
+            <key>attachmentsByRange</key>
+            <dict>
+              <key>{0, 1}</key>
+              <dict>
+                <key>Type</key>
+                <string>ActionOutput</string>
+                <key>OutputUUID</key>
+                <string>6657B5E0-CA02-4E3D-A3F8-336D0FC136A1</string>
+                <key>OutputName</key>
+                <string>Clipboard</string>
+              </dict>
+            </dict>
           </dict>
           <key>WFSerializationType</key>
-          <string>WFTextTokenAttachment</string>
+          <string>WFTextTokenString</string>
         </dict>
       </dict>
     </dict>
@@ -372,15 +380,23 @@ class GamePageService {
         <dict>
           <key>Value</key>
           <dict>
-            <key>Type</key>
-            <string>ActionOutput</string>
-            <key>OutputUUID</key>
-            <string>BA88A305-A887-4877-AB32-991AFD48A939</string>
-            <key>OutputName</key>
-            <string>JavaScript Result</string>
+            <key>string</key>
+            <string>￼</string>
+            <key>attachmentsByRange</key>
+            <dict>
+              <key>{0, 1}</key>
+              <dict>
+                <key>Type</key>
+                <string>ActionOutput</string>
+                <key>OutputUUID</key>
+                <string>BA88A305-A887-4877-AB32-991AFD48A939</string>
+                <key>OutputName</key>
+                <string>JavaScript Result</string>
+              </dict>
+            </dict>
           </dict>
           <key>WFSerializationType</key>
-          <string>WFTextTokenAttachment</string>
+          <string>WFTextTokenString</string>
         </dict>
       </dict>
     </dict>

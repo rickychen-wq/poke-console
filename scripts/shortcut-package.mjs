@@ -8,6 +8,9 @@ const uuid = key => {
   return `${hex.slice(0,8)}-${hex.slice(8,12)}-4${hex.slice(13,16)}-a${hex.slice(17,20)}-${hex.slice(20)}`.toUpperCase();
 };
 const attachment = value => ({Value:value,WFSerializationType:'WFTextTokenAttachment'});
+// Match Text's `text` slot and Show Result's `Text` slot are text fields.
+// A bare token attachment is not a valid substitute for their token-string wrapper.
+const textToken = value => ({Value:{string:'\uFFFC',attachmentsByRange:{'{0, 1}':value}},WFSerializationType:'WFTextTokenString'});
 const output = (name, id) => ({Type:'ActionOutput',OutputUUID:id,OutputName:name});
 const action = (name,parameters) => ({WFWorkflowActionIdentifier:actionId(name),WFWorkflowActionParameters:parameters});
 
@@ -36,10 +39,10 @@ export function shortcutPackages(probe,runtime) {
   const offset=runtime.indexOf(token);
   const script=runtime.replace(token,'\uFFFC');
   const webpage=attachment({Type:'ExtensionInput'});
-  const main=workflow('Poké Console',[
+  const main=workflow('Poké Console v2',[
     action('comment',{WFCommentActionText:'從已登入的 pokesurvivor.com 主選單，使用 Safari 分享選單執行。先複製控制台產生的數字指令。請先通過「Poké 連線測試」。不收帳密。原始碼：https://github.com/rickychen-wq/poke-console'}),
     action('getclipboard',{UUID:clipId}),
-    action('text.match',{UUID:matchId,WFMatchTextPattern:'^[0-9]{3,60000}$',WFMatchTextCaseSensitive:true,WFInput:attachment(output('Clipboard',clipId))}),
+    action('text.match',{UUID:matchId,WFMatchTextPattern:'^[0-9]{3,60000}$',WFMatchTextCaseSensitive:true,text:textToken(output('Clipboard',clipId))}),
     action('runjavascriptonwebpage',{
       UUID:runId,
       WFInput:webpage,
@@ -48,12 +51,12 @@ export function shortcutPackages(probe,runtime) {
         WFSerializationType:'WFTextTokenString',
       },
     }),
-    action('showresult',{Text:attachment(output('JavaScript Result',runId))}),
+    action('showresult',{Text:textToken(output('JavaScript Result',runId))}),
   ],4282601983);
-  const test=workflow('Poké 連線測試',[
+  const test=workflow('Poké 連線測試 v2',[
     action('comment',{WFCommentActionText:'只讀測試，不修改存檔。從已登入的 pokesurvivor.com 主選單，用 Safari 分享選單執行。supported、gameService、signedIn 都是 true 才能繼續。'}),
     action('runjavascriptonwebpage',{UUID:probeId,WFInput:webpage,WFJavaScript:probe}),
-    action('showresult',{Text:attachment(output('JavaScript Result',probeId))}),
+    action('showresult',{Text:textToken(output('JavaScript Result',probeId))}),
   ],4292093695);
   return [{basename:'Poke-Connection-Test',workflow:test},{basename:'Poke-Console',workflow:main}];
 }

@@ -1,5 +1,5 @@
 {
-  "WFWorkflowName": "Poké 連線測試",
+  "WFWorkflowName": "Poké 連線測試 v2",
   "WFWorkflowClientVersion": "2600.0.0",
   "WFWorkflowMinimumClientVersion": 900,
   "WFWorkflowMinimumClientVersionString": "900",
@@ -43,11 +43,16 @@
       "WFWorkflowActionParameters": {
         "Text": {
           "Value": {
-            "Type": "ActionOutput",
-            "OutputUUID": "7F3768E6-20CD-45EB-A5D3-177AF2BA92E6",
-            "OutputName": "JavaScript Result"
+            "string": "￼",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "ActionOutput",
+                "OutputUUID": "7F3768E6-20CD-45EB-A5D3-177AF2BA92E6",
+                "OutputName": "JavaScript Result"
+              }
+            }
           },
-          "WFSerializationType": "WFTextTokenAttachment"
+          "WFSerializationType": "WFTextTokenString"
         }
       }
     }

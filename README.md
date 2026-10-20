@@ -12,16 +12,24 @@ The site only creates a data packet containing the operations you selected. You 
 
 ## Use
 
-1. In iPhone Safari, download the ready-made [connection test](shortcut/Poke-Connection-Test.shortcut) and [operation shortcut](shortcut/Poke-Console.shortcut). Open the downloads (or use Files → Downloads) and tap **Add Shortcut**. Apple requires the user to confirm adding; the website cannot silently install a shortcut.
-2. On the already-signed-in game main menu, open Safari's share sheet and run **Poké 連線測試** (the imported name may be `Poke-Connection-Test`). `supported`, `gameService` and `signedIn` must all be `true` before continuing. The probe is read-only.
+1. In iPhone Safari, download the ready-made [connection test](shortcut/Poke-Connection-Test-v2.shortcut) and [operation shortcut](shortcut/Poke-Console-v2.shortcut). Open the downloads (or use Files → Downloads) and tap **Add Shortcut**. Apple requires the user to confirm adding; the website cannot silently install a shortcut.
+2. On the already-signed-in game main menu, open Safari's share sheet and run **Poké 連線測試 v2** (the imported name may be `Poke-Connection-Test-v2`). `supported`, `gameService` and `signedIn` must all be `true` before continuing. The probe is read-only.
 3. On the website, build your plan, review it, and copy its numeric operation packet.
-4. Switch to the signed-in game main menu, share to **Poké Console** (or `Poke-Console`), and wait for its result. Only `ok: true` represents verified server save success. Refresh the game after success.
+4. Switch to the signed-in game main menu, share to **Poké Console v2** (or `Poke-Console-v2`), and wait for its result. Only `ok: true` represents verified server save success. Refresh the game after success.
 
 The installed shortcut already contains Get Clipboard → Match Text (`^[0-9]{3,60000}$`) → Run JavaScript on Webpage → Show Result. The numeric output is connected as a real magic variable, and the JavaScript action's webpage input is connected to the original Safari webpage. **No manual code editing is required.** The website retains manual setup instructions and source-copy controls as an alternative.
 
 The `.shortcut` files were signed for `anyone` using [Shortcuty's documented signing service](https://github.com/Shortcuty/Signing-Server-API-Documentation). Only the public, generated workflow source was submitted; no game account or authentication data was submitted. `shortcut/signing-manifest.json` records the provider, uploaded-source SHA-256, signed-file SHA-256 and file sizes. Tests reject stale sources or changed downloads. These transport and integrity checks do not replace Apple's import validation or real-device testing.
 
 The shortcut may require the user to enable Allow Running Scripts in iPhone Shortcuts settings and grant access to this game page. The user decides whether to grant this permission. Review the source before enabling it.
+
+## v2 input wiring correction
+
+Reinstall both signed v2 shortcuts if you installed the initial release. The first package incorrectly placed Match Text's clipboard input in `WFInput`; this action requires the lowercase `text` slot. Both shortcuts also used a bare `WFTextTokenAttachment` for Show Result's `Text`, which requires a `WFTextTokenString`. Those disconnected inputs can explain a manual text prompt or missing output; the exact phone dialog has not yet been observed.
+
+The correction follows independently decoded Apple action slots in [shortcut-lib's observed envelope corpus](https://github.com/findlaywebb/shortcut-lib/blob/main/data/observed_envelope_types.json). Regression tests explicitly reject the original field name and wrapper, and trace an actual 500-ticket numeric packet from the clipboard through the generated workflow. This is an offline format check, not a real iPhone execution test.
+
+The `-v2.shortcut` downloads have distinct filenames so users can choose the repaired shortcuts. Original download paths serve the same corrected bytes for compatibility; the signing manifest includes and checks both names. Run Test v2 from the signed-in game's Safari share sheet before using Console v2. Neither shortcut needs a manually entered number.
 
 ## What the site does
 

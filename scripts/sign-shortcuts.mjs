@@ -15,7 +15,7 @@ for(const name of ['Poke-Connection-Test','Poke-Console']){
   const input=fs.readFileSync(path.join(root,name+'.unsigned.plist'));
   const response=await fetch(endpoint+'?response=json',{
     method:'POST',
-    headers:{'Content-Type':'application/octet-stream','X-Filename':name+'.shortcut'},
+    headers:{'Content-Type':'application/octet-stream','X-Filename':name+'-v2.shortcut'},
     body:input,
     signal:AbortSignal.timeout(45000),
   });
@@ -25,8 +25,11 @@ for(const name of ['Poke-Connection-Test','Poke-Console']){
   const bytes=Buffer.from(file.content_base64,'base64');
   if(file.format!=='AEA1'||file.signing_mode!=='anyone'||bytes.subarray(0,4).toString()!=='AEA1'||bytes.length!==file.size||hash(input)!==file.input_sha256||hash(bytes)!==file.signed_sha256)throw new Error('Signing response integrity mismatch');
   staged.push({name,bytes});
-  report.files.push({filename:name+'.shortcut',size:bytes.length,input_sha256:file.input_sha256,signed_sha256:file.signed_sha256});
+  report.files.push({filename:name+'.shortcut',aliases:[name+'-v2.shortcut'],size:bytes.length,input_sha256:file.input_sha256,signed_sha256:file.signed_sha256});
   console.log(name+': signed response received; input and output hashes match.');
 }
-for(const {name,bytes} of staged)fs.writeFileSync(path.join(root,name+'.shortcut'),bytes);
+for(const {name,bytes} of staged){
+  fs.writeFileSync(path.join(root,name+'.shortcut'),bytes);
+  fs.writeFileSync(path.join(root,name+'-v2.shortcut'),bytes);
+}
 fs.writeFileSync(path.join(root,'signing-manifest.json'),JSON.stringify(report,null,2)+'\n');

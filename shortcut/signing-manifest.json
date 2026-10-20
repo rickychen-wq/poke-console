@@ -1,19 +1,25 @@
 {
   "provider": "https://sign.shortcuty.app/api/v1/sign",
   "mode": "anyone",
-  "date": "2026-10-20T14:05:09.692Z",
+  "date": "2026-10-20T14:20:51.803Z",
   "files": [
     {
       "filename": "Poke-Connection-Test.shortcut",
-      "size": 22467,
-      "input_sha256": "5ed53edf4b1234dc8fa0f4da21ff1e1e17b6fc07782cb53292ffe08955390ae7",
-      "signed_sha256": "cfe9c770d6c86150609bae05f49b66eb7b9bc13d09bb70fb283be647073f8539"
+      "aliases": [
+        "Poke-Connection-Test-v2.shortcut"
+      ],
+      "size": 22530,
+      "input_sha256": "ac49b813678e3fccc1666b92be8867c0ab4982fc7fbb93345c4268df6a002e7d",
+      "signed_sha256": "71ff1f182e15b44e6e1e988a78b4526b25a6eb8938da0ccc136b3465bb2c9c1f"
     },
     {
       "filename": "Poke-Console.shortcut",
-      "size": 37696,
-      "input_sha256": "5e50d52f71b1f05b62c4fe8f187cfc90d0ee28cb74989338f8d07f2dd380b9b7",
-      "signed_sha256": "a083b6d6e92f8340f76259d26c92cf9a4dc953f75ae302f489faae929b5a22eb"
+      "aliases": [
+        "Poke-Console-v2.shortcut"
+      ],
+      "size": 37724,
+      "input_sha256": "d70263ccd3a468068967643178f8c302d1a5d4ce2692169d8c54038f0d206849",
+      "signed_sha256": "af7ae5919885ba1ec343d2c6b68929035f1011bfbcf539bddde633027be403d0"
     }
   ]
 }

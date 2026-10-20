@@ -1,5 +1,5 @@
 {
-  "WFWorkflowName": "Poké Console",
+  "WFWorkflowName": "Poké Console v2",
   "WFWorkflowClientVersion": "2600.0.0",
   "WFWorkflowMinimumClientVersion": 900,
   "WFWorkflowMinimumClientVersionString": "900",
@@ -37,13 +37,18 @@
         "UUID": "367D9A2F-A39B-4969-A00D-8264094BC57F",
         "WFMatchTextPattern": "^[0-9]{3,60000}$",
         "WFMatchTextCaseSensitive": true,
-        "WFInput": {
+        "text": {
           "Value": {
-            "Type": "ActionOutput",
-            "OutputUUID": "6657B5E0-CA02-4E3D-A3F8-336D0FC136A1",
-            "OutputName": "Clipboard"
+            "string": "￼",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "ActionOutput",
+                "OutputUUID": "6657B5E0-CA02-4E3D-A3F8-336D0FC136A1",
+                "OutputName": "Clipboard"
+              }
+            }
           },
-          "WFSerializationType": "WFTextTokenAttachment"
+          "WFSerializationType": "WFTextTokenString"
         }
       }
     },
@@ -77,11 +82,16 @@
       "WFWorkflowActionParameters": {
         "Text": {
           "Value": {
-            "Type": "ActionOutput",
-            "OutputUUID": "BA88A305-A887-4877-AB32-991AFD48A939",
-            "OutputName": "JavaScript Result"
+            "string": "￼",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "ActionOutput",
+                "OutputUUID": "BA88A305-A887-4877-AB32-991AFD48A939",
+                "OutputName": "JavaScript Result"
+              }
+            }
           },
-          "WFSerializationType": "WFTextTokenAttachment"
+          "WFSerializationType": "WFTextTokenString"
         }
       }
     }
