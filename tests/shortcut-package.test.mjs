@@ -2,12 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {createHash} from 'node:crypto';
-import {shortcutPackages,xmlPlist} from '../scripts/shortcut-package.mjs';
+import {shortcutPackages,moduleProbePackage,xmlPlist} from '../scripts/shortcut-package.mjs';
 import {encodePacket,decodePacket} from '../js/packet.js';
 
 const runtime=fs.readFileSync(new URL('../shortcut/run-on-game.js',import.meta.url),'utf8');
 const probe=fs.readFileSync(new URL('../shortcut/probe.js',import.meta.url),'utf8');
 const packages=shortcutPackages(probe,runtime);
+const moduleProbe=fs.readFileSync(new URL('../shortcut/module-probe.js',import.meta.url),'utf8');
+const allPackages=[...packages,moduleProbePackage(moduleProbe)];
 // Independently observed Apple action slots, not inferred from our generator:
 // https://github.com/findlaywebb/shortcut-lib/blob/main/data/observed_envelope_types.json
 function validateInputSlots(workflow){
@@ -29,7 +31,7 @@ function validateInputSlots(workflow){
   }
 }
 test('Apple input-slot contract detects missing text and disconnected result tokens',()=>{
-  for(const item of packages)validateInputSlots(item.workflow);
+  for(const item of allPackages)validateInputSlots(item.workflow);
   const oldMatch=structuredClone(packages[1].workflow);
   const match=oldMatch.WFWorkflowActions.find(a=>a.WFWorkflowActionIdentifier.endsWith('.text.match')).WFWorkflowActionParameters;
   match.WFInput=match.text;delete match.text;
@@ -39,7 +41,7 @@ test('Apple input-slot contract detects missing text and disconnected result tok
   assert.throws(()=>validateInputSlots(oldDisplay),/showresult.Text serialization/);
 });
 test('Prewired shortcuts accept only the original Safari webpage',()=>{
-  for(const item of packages){
+  for(const item of allPackages){
     const w=item.workflow;
     assert.deepEqual(w.WFWorkflowInputContentItemClasses,['WFSafariWebPageContentItem']);
     assert.deepEqual(w.WFWorkflowTypes,['ActionExtension']);
@@ -89,7 +91,7 @@ test('500 ten-pull tickets flow from the clipboard through the actual lowercase 
   assert.deepEqual(decodePacket(injected),draft);
 });
 test('Generated package sources are deterministic and match committed files',()=>{
-  for(const item of packages){
+  for(const item of allPackages){
     assert.equal(fs.readFileSync(new URL('../shortcut/'+item.basename+'.unsigned.plist',import.meta.url),'utf8'),xmlPlist(item.workflow));
     assert.deepEqual(JSON.parse(fs.readFileSync(new URL('../shortcut/'+item.basename+'.workflow.json',import.meta.url))),item.workflow);
   }
@@ -98,8 +100,8 @@ test('Signed downloads have verified hashes and correspond to current generated 
   const manifest=JSON.parse(fs.readFileSync(new URL('../shortcut/signing-manifest.json',import.meta.url)));
   const hash=b=>createHash('sha256').update(b).digest('hex');
   assert.equal(manifest.mode,'anyone');
-  assert.equal(manifest.files.length,packages.length);
-  for(const item of packages){
+  assert.equal(manifest.files.length,allPackages.length);
+  for(const item of allPackages){
     const record=manifest.files.find(f=>f.filename===item.basename+'.shortcut');
     assert(record);
     const bytes=fs.readFileSync(new URL('../shortcut/'+record.filename,import.meta.url));
@@ -107,7 +109,7 @@ test('Signed downloads have verified hashes and correspond to current generated 
     assert.equal(bytes.length,record.size);
     assert.equal(hash(bytes),record.signed_sha256);
     assert.equal(hash(Buffer.from(xmlPlist(item.workflow))),record.input_sha256);
-    assert.deepEqual(record.aliases,[item.basename+'-v2.shortcut']);
+    assert.deepEqual(record.aliases,item.basename==='Poke-Module-Test'?[]:[item.basename+'-v2.shortcut']);
     for(const alias of record.aliases)assert.deepEqual(fs.readFileSync(new URL('../shortcut/'+alias,import.meta.url)),bytes);
   }
 });

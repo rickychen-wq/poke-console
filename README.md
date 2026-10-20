@@ -8,7 +8,7 @@ A connectivity check on 2026-10-20 confirmed that the game's Firebase Authentica
 
 The site only creates a data packet containing the operations you selected. You invoke the supplied shortcut from the Safari share sheet on the actual, already-signed-in `pokesurvivor.com` game page. No referrer headers are forged, no proxy is used, and no game access rules are changed.
 
-**iPhone compatibility is not yet validated on a real device.** First run the supplied read-only probe. If the shortcut's JavaScript environment cannot see the game service, it stops without writing. Do not treat a published static site or a passing unit test as proof of live-game compatibility.
+**The current shortcut failed to access the game service on a real iPhone.** A user-supplied 2026-10-20 screenshot shows `supported: true`, `gameService: false`. The old probe sets `signedIn: false` whenever the service is unavailable, so that value does not prove the player is signed out. First run the supplied read-only probe. If the shortcut's JavaScript environment cannot see the game service, it stops without writing. Do not treat a published static site or a passing unit test as proof of live-game compatibility.
 
 ## Use
 
@@ -30,6 +30,16 @@ Reinstall both signed v2 shortcuts if you installed the initial release. The fir
 The correction follows independently decoded Apple action slots in [shortcut-lib's observed envelope corpus](https://github.com/findlaywebb/shortcut-lib/blob/main/data/observed_envelope_types.json). Regression tests explicitly reject the original field name and wrapper, and trace an actual 500-ticket numeric packet from the clipboard through the generated workflow. This is an offline format check, not a real iPhone execution test.
 
 The `-v2.shortcut` downloads have distinct filenames so users can choose the repaired shortcuts. Original download paths serve the same corrected bytes for compatibility; the signing manifest includes and checks both names. Run Test v2 from the signed-in game's Safari share sheet before using Console v2. Neither shortcut needs a manually entered number.
+
+## Read-only module diagnostic
+
+The new [Poke-Module-Test.shortcut](shortcut/Poke-Module-Test.shortcut) investigates a separate approach. It imports Firebase 13.0.0 modules from Google's official `www.gstatic.com` CDN, uses the public Firebase config already shipped by the game, and asks the SDK to restore an existing same-origin Auth session using its supported persistence implementations. It never requests a password, exports an authentication token, forges a referrer, logs in as another user, or invokes a Firestore write API.
+
+If restoration succeeds, it reads only `saves/{auth.currentUser.uid}` from the server. Output contains capability/stage flags and resource totals, with no UID, email, profile name or tokens. A nine-second deadline bounds the diagnostic; cloud access is skipped if an earlier phase finishes after the deadline. The SDK may perform its normal session persistence/refresh work; "read-only" refers to game save operations.
+
+Run it from the signed-in game's Safari share sheet without any numeric packet and report its result. **A successful module test does not enable the old operation shortcut**, which still requires the page-global service. This diagnostic has offline unit tests but still requires a real iPhone execution to establish whether module loading, session storage and a server read work in that environment. Script isolation is a plausible explanation for the screenshot, consistent with [Apple's content-world documentation](https://developer.apple.com/documentation/webkit/wkcontentworld); the screenshot alone does not distinguish isolation from every other service-loading failure.
+
+The SDK initialization/persistence approach follows [Firebase's custom Auth dependencies documentation](https://firebase.google.com/docs/auth/web/custom-dependencies). The game's CSP currently allows `https://www.gstatic.com`; all three exact module URLs returned HTTP 200 with CORS `*` during development. Those HTTP checks do not prove they can be imported by iPhone Shortcuts.
 
 ## What the site does
 
@@ -77,9 +87,10 @@ npm run sign:shortcuts
 - `js/service.js`: game-page-only service adapter and isolated demo/planner adapters.
 - `js/app.js`: UI, queue and preview flow.
 - `data/catalog.json`: 966 supported Pokémon, 87 legendary flags, 14 current upgrade limits; game bundle `1afa081e93`, checked 2026-10-20.
+- `js/module-probe.js`: read-only alternative-session diagnostic; independent from the operation shortcut.
 - `scripts/build-shortcut.mjs`: generates the JavaScript, unsigned XML plists and reviewable workflow JSON.
 - `scripts/shortcut-package.mjs`: wires Safari input and UTF-16 magic-variable attachments into deterministic workflow packages.
-- `scripts/sign-shortcuts.mjs`: explicitly uploads only public workflow source to the signing service; validates returned hashes before replacing both downloads.
+- `scripts/sign-shortcuts.mjs`: explicitly uploads only public workflow source to the signing service; validates returned hashes before replacing the downloads.
 - `shortcut/*.shortcut`: signed downloads; `*.unsigned.plist` and `*.workflow.json` are the matching readable sources.
 - `tests/`: ledger tests, identity scoping, moderation preservation, oversized-plan rejection and complete generated-shortcut simulations with an offline fake service.
 

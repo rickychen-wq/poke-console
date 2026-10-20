@@ -61,6 +61,15 @@ export function shortcutPackages(probe,runtime) {
   return [{basename:'Poke-Connection-Test',workflow:test},{basename:'Poke-Console',workflow:main}];
 }
 
+export function moduleProbePackage(script){
+  const id=uuid('module-probe-js');
+  return {basename:'Poke-Module-Test',workflow:workflow('Poké 模組連線檢查',[
+    action('comment',{WFCommentActionText:'只讀診斷：從已登入的 .com 遊戲頁面分享執行。不需要數字指令，不修改遊戲存檔，不輸出密碼或登入憑證。'}),
+    action('runjavascriptonwebpage',{UUID:id,WFInput:attachment({Type:'ExtensionInput'}),WFJavaScript:script}),
+    action('showresult',{Text:textToken(output('JavaScript Result',id))}),
+  ],4292093695)};
+}
+
 const xmlEscape = value => value.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&apos;');
 function xmlValue(value,depth=0) {
   const pad='  '.repeat(depth);

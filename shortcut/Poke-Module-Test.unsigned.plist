@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>WFWorkflowName</key>
+  <string>Poké 模組連線檢查</string>
+  <key>WFWorkflowClientVersion</key>
+  <string>2600.0.0</string>
+  <key>WFWorkflowMinimumClientVersion</key>
+  <integer>900</integer>
+  <key>WFWorkflowMinimumClientVersionString</key>
+  <string>900</string>
+  <key>WFWorkflowIcon</key>
+  <dict>
+    <key>WFWorkflowIconStartColor</key>
+    <integer>4292093695</integer>
+    <key>WFWorkflowIconGlyphNumber</key>
+    <integer>59511</integer>
+  </dict>
+  <key>WFWorkflowTypes</key>
+  <array>
+    <string>ActionExtension</string>
+  </array>
+  <key>WFQuickActionSurfaces</key>
+  <array>
+
+  </array>
+  <key>WFWorkflowInputContentItemClasses</key>
+  <array>
+    <string>WFSafariWebPageContentItem</string>
+  </array>
+  <key>WFWorkflowOutputContentItemClasses</key>
+  <array>
+
+  </array>
+  <key>WFWorkflowHasShortcutInputVariables</key>
+  <true/>
+  <key>WFWorkflowHasOutputFallback</key>
+  <false/>
+  <key>WFWorkflowImportQuestions</key>
+  <array>
+
+  </array>
+  <key>WFWorkflowActions</key>
+  <array>
+    <dict>
+      <key>WFWorkflowActionIdentifier</key>
+      <string>is.workflow.actions.comment</string>
+      <key>WFWorkflowActionParameters</key>
+      <dict>
+        <key>WFCommentActionText</key>
+        <string>只讀診斷：從已登入的 .com 遊戲頁面分享執行。不需要數字指令，不修改遊戲存檔，不輸出密碼或登入憑證。</string>
+      </dict>
+    </dict>
+    <dict>
+      <key>WFWorkflowActionIdentifier</key>
+      <string>is.workflow.actions.runjavascriptonwebpage</string>
+      <key>WFWorkflowActionParameters</key>
+      <dict>
+        <key>UUID</key>
+        <string>3B43CA4A-4655-4189-AAF4-D1041BABB81F</string>
+        <key>WFInput</key>
+        <dict>
+          <key>Value</key>
+          <dict>
+            <key>Type</key>
+            <string>ExtensionInput</string>
+          </dict>
+          <key>WFSerializationType</key>
+          <string>WFTextTokenAttachment</string>
+        </dict>
+        <key>WFJavaScript</key>
+        <string>// Diagnostic only: restores this origin&apos;s existing Auth session through the
+// official SDK and reads that user&apos;s own save. Never calls a game write API.
+const PUBLIC_GAME_CONFIG={
+  apiKey:&apos;AIzaSyB1LpJcsnT7gj7c8cpRMGjhswLPr8-dnBw&apos;,
+  authDomain:&apos;pokesurvivor-free.firebaseapp.com&apos;,
+  projectId:&apos;pokesurvivor-free&apos;,
+  appId:&apos;1:798271504277:web:dcac4409f969239e87009c&apos;,
+};
+async function loadOfficialSdk(){
+  const [app,auth,store]=await Promise.all([
+    import(&apos;https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js&apos;),
+    import(&apos;https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js&apos;),
+    import(&apos;https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js&apos;),
+  ]);
+  return {app,auth,store};
+}
+async function runModuleProbe(env,loadSdk=loadOfficialSdk,timeoutMs=9000){
+  const result={website:env.location.hostname,supported:false,pageGlobalAvailable:false,moduleLoaded:false,signedIn:null,cloudReadable:false,stage:&apos;website&apos;,message:&apos;&apos;};
+  let active=true,timer;
+  const finish=message=&gt;({...result,message});
+  const work=async()=&gt;{
+    result.supported=[&apos;pokesurvivor.com&apos;,&apos;www.pokesurvivor.com&apos;].includes(env.location.hostname);
+    if(!result.supported)return finish(&apos;請從 .com 遊戲頁面的 Safari 分享選單執行。&apos;);
+    result.pageGlobalAvailable=!!env.window?.firebase;
+    result.stage=&apos;module&apos;;
+    const sdk=await loadSdk();
+    if(!active)return result;
+    result.moduleLoaded=true;
+    result.stage=&apos;session&apos;;
+    const existing=sdk.app.getApps().find(app=&gt;app.name===&apos;[DEFAULT]&apos;);
+    if(existing&amp;&amp;(existing.options.projectId!==PUBLIC_GAME_CONFIG.projectId||existing.options.apiKey!==PUBLIC_GAME_CONFIG.apiKey))return finish(&apos;目前環境的服務設定不同，已停止。&apos;);
+    const app=existing||sdk.app.initializeApp(PUBLIC_GAME_CONFIG);
+    let auth;
+    try{
+      auth=sdk.auth.initializeAuth(app,{persistence:[sdk.auth.indexedDBLocalPersistence,sdk.auth.browserLocalPersistence,sdk.auth.browserSessionPersistence]});
+    }catch(error){
+      if(error.code!==&apos;auth/already-initialized&apos;)throw error;
+      auth=sdk.auth.getAuth(app);
+    }
+    await auth.authStateReady();
+    if(!active)return result;
+    result.signedIn=!!auth.currentUser;
+    if(!auth.currentUser)return finish(&apos;模組可載入，但沒有恢復到這個網站的登入狀態。未讀取或修改存檔。&apos;);
+    result.stage=&apos;server-read&apos;;
+    const reference=sdk.store.doc(sdk.store.getFirestore(app),&apos;saves&apos;,auth.currentUser.uid);
+    const snapshot=await sdk.store.getDocFromServer(reference);
+    if(!active)return result;
+    if(!snapshot.exists())return finish(&apos;已恢復登入，但目前帳號沒有雲端存檔。未修改資料。&apos;);
+    const document=snapshot.data();
+    if(document.ban===true)return finish(&apos;帳號已有伺服器限制，已停止。&apos;);
+    if(!document.save)return finish(&apos;雲端沒有可辨識的存檔。未修改資料。&apos;);
+    result.cloudReadable=true;
+    result.stage=&apos;complete&apos;;
+    const number=n=&gt;Number.isSafeInteger(n)&amp;&amp;n&gt;=0?n:null;
+    result.values={coins:number(document.save.coins),t1:number(document.save.tickets?.t1),t10:number(document.save.tickets?.t10)};
+    return finish(&apos;只讀雲端連線成功。這個測試沒有修改存檔；舊操作捷徑仍不能直接使用這個模組。&apos;);
+  };
+  try{
+    return await Promise.race([
+      work().catch(error=&gt;{
+        const code=/^[a-z-]+\/[a-z-]+$/.test(error?.code||&apos;&apos;)?error.code:&apos;unavailable&apos;;
+        return {...finish(&apos;目前環境無法完成這個階段，沒有修改遊戲存檔。&apos;),code};
+      }),
+      new Promise(resolve=&gt;{timer=setTimeout(()=&gt;{active=false;resolve({...finish(&apos;只讀測試已逾時停止，沒有修改遊戲存檔。&apos;),code:&apos;timeout&apos;});},timeoutMs);}),
+    ]);
+  }finally{active=false;clearTimeout(timer);}
+}
+
+runModuleProbe({location,window}).then(result=&gt;completion(JSON.stringify(result,null,2))).catch(()=&gt;completion(&apos;只讀診斷未完成；沒有修改遊戲存檔。&apos;));
+</string>
+      </dict>
+    </dict>
+    <dict>
+      <key>WFWorkflowActionIdentifier</key>
+      <string>is.workflow.actions.showresult</string>
+      <key>WFWorkflowActionParameters</key>
+      <dict>
+        <key>Text</key>
+        <dict>
+          <key>Value</key>
+          <dict>
+            <key>string</key>
+            <string>￼</string>
+            <key>attachmentsByRange</key>
+            <dict>
+              <key>{0, 1}</key>
+              <dict>
+                <key>Type</key>
+                <string>ActionOutput</string>
+                <key>OutputUUID</key>
+                <string>3B43CA4A-4655-4189-AAF4-D1041BABB81F</string>
+                <key>OutputName</key>
+                <string>JavaScript Result</string>
+              </dict>
+            </dict>
+          </dict>
+          <key>WFSerializationType</key>
+          <string>WFTextTokenString</string>
+        </dict>
+      </dict>
+    </dict>
+  </array>
+</dict>
+</plist>
