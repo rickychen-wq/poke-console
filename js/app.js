@@ -1,6 +1,7 @@
 import {emptyDraft,draftCount,validateAmount,resourceValue,saveSummary,applyDraft,assertSafeSave,friendlyError,clone,RESOURCE_LABELS} from './core.js';
 import {DesignerService,DemoService} from './service.js';
 import {encodePacket} from './packet.js';
+import {desktopExecutionCode} from './desktop.js';
 
 const paths={
   grid:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
@@ -74,7 +75,7 @@ function renderStats(){
   }
   text('sync-time',state.lastRead?'讀取於 '+state.lastRead.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit',hour12:false}):'');
 }
-function enterWorkspace(service,save){state.service=service;state.save=save;state.draft=emptyDraft();state.lastRead=new Date();state.backup=null;state.history=[];$('welcome').hidden=true;$('welcome-footer').hidden=true;$('workspace').hidden=false;$('mobile-nav').hidden=false;$('demo-banner').hidden=!service.demo;text('session-name',save.name||'我的方案');$('session-dot').className='status-dot'+(service.demo?' pending':'');text('backup-label',service.designer?'下載方案':'下載展示備份');text('refresh-label',service.designer?'方案預覽':'重新讀取');text('coin-card-label',service.designer?'方案金幣數量':'展示金幣餘額');text('collection-card-label',service.designer?'方案收藏':'展示收藏');renderStats();renderDraft();setStatus(service.demo?'展示資料 · 不會連接遊戲帳號':'方案設計模式 · 這裡不讀取遊戲存檔');setView('overview',false);addHistory(service.demo?'已開啟展示模式':'已建立修改方案',service.demo?'所有操作只作用於這個展示頁面。':'在這裡選擇操作，再於遊戲頁面透過捷徑執行。');}
+function enterWorkspace(service,save){state.service=service;state.save=save;state.draft=emptyDraft();state.lastRead=new Date();state.backup=null;state.history=[];$('welcome').hidden=true;$('welcome-footer').hidden=true;$('workspace').hidden=false;$('mobile-nav').hidden=false;$('demo-banner').hidden=!service.demo;text('session-name',save.name||'我的方案');$('session-dot').className='status-dot'+(service.demo?' pending':'');text('backup-label',service.designer?'下載方案':'下載展示備份');text('refresh-label',service.designer?'方案預覽':'重新讀取');text('coin-card-label',service.designer?'方案金幣數量':'展示金幣餘額');text('collection-card-label',service.designer?'方案收藏':'展示收藏');renderStats();renderDraft();setStatus(service.demo?'展示資料 · 不會連接遊戲帳號':'方案設計模式 · 這裡不讀取遊戲存檔');setView('overview',false);addHistory(service.demo?'已開啟展示模式':'已建立修改方案',service.demo?'所有操作只作用於這個展示頁面。':'在這裡選擇操作，再於電腦遊戲分頁執行。');}
 async function leaveWorkspace(){if(state.busy)return;state.authEpoch++;await state.service?.logout();state.service=null;state.save=null;state.draft=emptyDraft();state.backup=null;state.history=[];state.reviewDraft=null;$('welcome').hidden=false;$('welcome-footer').hidden=false;$('workspace').hidden=true;$('mobile-nav').hidden=true;$('demo-banner').hidden=true;for(const dialog of [$('account-dialog'),$('review-dialog'),$('export-dialog')])if(dialog.open)dialog.close();text('session-name','尚未建立方案');$('session-dot').className='status-dot muted';text('breadcrumb-title','總覽');renderDraft();window.scrollTo({top:0,behavior:'instant'});}
 function draftChanged(message){if(state.busy)return;renderDraft();if(state.view==='collection')renderPokemon();if(state.view==='upgrades')renderUpgrades();if(message)toast(message);}
 function renderDraft(){const n=draftCount(state.draft);$('draft-bar').hidden=!n||!state.save;text('draft-count',n>999?'999+':fmt(n));document.body.classList.toggle('has-draft',!!n&&!!state.save);}
@@ -121,9 +122,9 @@ function review(){
     if(plan.shiny.length)rows.push(['異色收藏紀錄',`解鎖 ${fmt(plan.shiny.length)} 隻`]);
     if(plan.max.length)rows.push(['永久強化',`${fmt(plan.max.length)} 隻角色滿級`]);
     $('review-list').innerHTML=rows.map(([label,value])=>`<div class="review-row"><span>${escape(label)}</span><strong>${escape(value)}</strong></div>`).join('');
-    text('review-description',state.service.demo?'展示模式：以下操作不會連接或修改遊戲帳號。':'確認後產生數字指令，不會在 GitHub 網頁寫入遊戲帳號。');
-    text('review-safety',state.service.demo?'這是展示資料。套用後可查看變更。':'已通過方案預檢。實際執行時，捷徑還會以遊戲的最新存檔再檢查一次。');
-    text('apply-label',state.service.designer?'產生數字指令':'套用展示資料');
+    text('review-description',state.service.demo?'展示模式：以下操作不會連接或修改遊戲帳號。':'確認後產生執行指令，不會在 GitHub 網頁寫入遊戲帳號。');
+    text('review-safety',state.service.demo?'這是展示資料。套用後可查看變更。':'已通過方案預檢。實際執行時，電腦程式還會以遊戲的最新存檔再檢查一次。');
+    text('apply-label',state.service.designer?'產生執行指令':'套用展示資料');
     $('review-dialog').showModal();
   }catch(e){toast(friendlyError(e),true);}
 }
@@ -137,7 +138,8 @@ async function apply(){
     state.save=clone(state.service.save);state.reviewDraft=null;
     renderStats();renderDraft();addHistory('已產生操作指令',draftDescription(draft)+'；尚未在遊戲執行。');setStatus('方案指令已產生 · 尚未執行於遊戲');
     $('review-dialog').close();$('command-text').value=packet;text('command-summary',draftDescription(draft));$('export-dialog').showModal();
-    try{await navigator.clipboard.writeText(packet);toast('數字指令已複製。請到遊戲頁面分享執行捷徑。');}catch{toast('指令已產生，可按複製或手動全選。');}
+    $('desktop-code').value='';$('desktop-code-details').hidden=true;
+    toast('方案指令已產生。電腦請按「複製電腦執行程式」。');
     return;
   }
   state.busy=true;inlineError('apply-error','');busyButton($('apply-button'),true,'保存並驗證中');$('close-review').disabled=true;$('download-before').disabled=true;setStatus('正在保存，接著向伺服器回讀確認','pending');
@@ -152,14 +154,14 @@ async function apply(){
     inlineError('apply-error',message);setStatus(e.committed?'寫入已送出，但驗證不符 · 請重新讀取':'尚未確認保存 · 請查看錯誤','error');addHistory('保存未完成',message,'error');
   }finally{state.busy=false;busyButton($('apply-button'),false);$('close-review').disabled=false;$('download-before').disabled=false;}
 }
-async function refresh(){if(state.busy||!state.service)return;state.busy=true;busyButton($('refresh-button'),true,'更新中');try{state.save=await state.service.read();state.lastRead=new Date();renderStats();if(state.view==='collection')renderPokemon();if(state.view==='upgrades')renderUpgrades();setStatus(state.service.demo?'展示資料已讀取':'方案預覽已更新 · 不是遊戲的即時數據');toast(state.service.designer?'這裡是方案預覽，實際存檔由遊戲捷徑確認。':'已重新讀取展示資料。');}catch(e){toast(friendlyError(e),true);}finally{state.busy=false;busyButton($('refresh-button'),false);}}
+async function refresh(){if(state.busy||!state.service)return;state.busy=true;busyButton($('refresh-button'),true,'更新中');try{state.save=await state.service.read();state.lastRead=new Date();renderStats();if(state.view==='collection')renderPokemon();if(state.view==='upgrades')renderUpgrades();setStatus(state.service.demo?'展示資料已讀取':'方案預覽已更新 · 不是遊戲的即時數據');toast(state.service.designer?'這裡是方案預覽，實際存檔由遊戲分頁的執行結果確認。':'已重新讀取展示資料。');}catch(e){toast(friendlyError(e),true);}finally{state.busy=false;busyButton($('refresh-button'),false);}}
 function bind(){
   document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>setView(button.dataset.view)));
   document.querySelectorAll('[data-go]').forEach(button=>button.addEventListener('click',()=>setView(button.dataset.go)));
   $('designer-button').addEventListener('click',async()=>{if(state.busy)return;state.authEpoch++;const service=new DesignerService();enterWorkspace(service,await service.read());});
   $('demo-button').addEventListener('click',async()=>{if(state.busy)return;state.authEpoch++;const service=new DemoService();enterWorkspace(service,await service.read());});
   $('leave-demo').addEventListener('click',leaveWorkspace);
-  $('session-button').addEventListener('click',()=>{if(!state.save){$('designer-button').focus();return;}text('account-name',state.save.name||'目前方案');text('account-detail',state.service.demo?'展示模式不會連接或修改遊戲帳號。':'本頁只產生操作方案，沒有登入或讀取遊戲帳號。請在遊戲頁面透過 Safari 捷徑執行。');$('account-dialog').showModal();});
+  $('session-button').addEventListener('click',()=>{if(!state.save){$('designer-button').focus();return;}text('account-name',state.save.name||'目前方案');text('account-detail',state.service.demo?'展示模式不會連接或修改遊戲帳號。':'本頁只產生操作方案，沒有登入或讀取遊戲帳號。請在電腦遊戲分頁執行。');$('account-dialog').showModal();});
   $('close-account').addEventListener('click',()=>$('account-dialog').close());$('logout-button').addEventListener('click',()=>leaveWorkspace().catch(e=>toast(friendlyError(e),true)));
   $('backup-button').addEventListener('click',()=>downloadBackup());$('download-before').addEventListener('click',()=>downloadBackup());$('refresh-button').addEventListener('click',refresh);
   document.querySelectorAll('[data-quick]').forEach(button=>button.addEventListener('click',()=>{const quick=button.dataset.quick;if(quick==='coins')stageResources({c:2000000});if(quick==='tickets')stageResources({t1:100,t10:100});if(quick==='collection'){const ids=state.catalog.pokemon.map(m=>m.id);stageIds('shiny',ids);}}));
@@ -178,6 +180,8 @@ function bind(){
   $('review-button').addEventListener('click',review);$('close-review').addEventListener('click',()=>{if(!state.busy)$('review-dialog').close();});$('review-dialog').addEventListener('cancel',event=>{if(state.busy)event.preventDefault();});$('apply-button').addEventListener('click',apply);
   $('close-export').addEventListener('click',()=>$('export-dialog').close());
   $('copy-command').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('command-text').value);toast('數字指令已複製。');}catch{$('command-text').focus();$('command-text').select();toast('請長按指令欄位，選擇全選並複製。');}});
+  $('copy-desktop-command').addEventListener('click',copyDesktopCommand);
+  $('copy-desktop-probe').addEventListener('click',()=>copySource('./desktop/read-only.js','電腦只讀檢查已複製。請在遊戲分頁的開發工具主控台執行。'));
   $('copy-probe').addEventListener('click',()=>copySource('./shortcut/probe.js'));
   $('copy-shortcut').addEventListener('click',()=>copySource('./shortcut/run-on-game.js'));
   $('export-setup-link').addEventListener('click',()=>$('export-dialog').close());
@@ -189,5 +193,17 @@ async function start(){
   if(state.catalog.pokemon.length!==966||state.catalog.pokemon.filter(m=>m.legendary).length!==87)throw new Error('圖鑑資料版本不符。');
   bind();
 }
-async function copySource(url){try{const promise=fetch(url).then(r=>{if(!r.ok)throw new Error('無法載入程式');return r.text();});if(window.ClipboardItem){await navigator.clipboard.write([new ClipboardItem({'text/plain':promise.then(s=>new Blob([s],{type:'text/plain'}))})]);}else{await navigator.clipboard.writeText(await promise);}toast('程式已複製，請貼到捷徑的 JavaScript 欄位。');}catch{toast('瀏覽器未允許複製。請點旁邊的「開啟原始碼」，手動全選複製。',true);}}
+async function copySource(url,message='程式已複製，請貼到捷徑的 JavaScript 欄位。'){try{const promise=fetch(url).then(r=>{if(!r.ok)throw new Error('無法載入程式');return r.text();});if(window.ClipboardItem){await navigator.clipboard.write([new ClipboardItem({'text/plain':promise.then(s=>new Blob([s],{type:'text/plain'}))})]);}else{await navigator.clipboard.writeText(await promise);}toast(message);}catch{toast('瀏覽器未允許複製。請點旁邊的「開啟原始碼」，手動全選複製。',true);}}
+async function copyDesktopCommand(){
+  const button=$('copy-desktop-command');button.disabled=true;
+  try{
+    const response=await fetch('./desktop/apply.js');
+    if(!response.ok)throw new Error('無法載入電腦執行程式，請重新整理控制台。');
+    const code=desktopExecutionCode($('command-text').value,await response.text());
+    $('desktop-code').value=code;$('desktop-code-details').hidden=false;
+    try{await navigator.clipboard.writeText(code);toast('電腦執行程式已複製，請到已登入的遊戲分頁主控台執行。');}
+    catch{$('desktop-code-details').open=true;$('desktop-code').focus();$('desktop-code').select();toast('請在展開的電腦程式欄位按 Ctrl+C 複製。',true);}
+  }catch(error){toast(friendlyError(error),true);}
+  finally{button.disabled=false;}
+}
 start().catch(e=>{text('boot-error',friendlyError(e));$('boot-error').hidden=false;});

@@ -35,7 +35,9 @@ fs.mkdirSync(path.join(root,'shortcut'),{recursive:true});
 fs.writeFileSync(path.join(root,'shortcut/run-on-game.js'),runtime);
 const probe=`// Read-only: no save is modified, no credentials are returned.\nconst supported=['pokesurvivor.com','www.pokesurvivor.com'].includes(location.hostname);\nconst available=!!window.firebase && typeof window.firebase.auth==='function';\ncompletion({website:location.hostname,supported,gameService:available,signedIn:available?!!window.firebase.auth().currentUser:false,message:!supported?'請在 .com 遊戲頁執行。':!available?'這個捷徑環境看不到遊戲服務；不要執行寫入指令。':'可讀取遊戲服務。'});\n`;
 fs.writeFileSync(path.join(root,'shortcut/probe.js'),probe);
-const moduleProbe=fs.readFileSync(path.join(root,'js/module-probe.js'),'utf8').replace(/^export /gm,'')+`\nrunModuleProbe({location,window}).then(result=>completion(JSON.stringify(result,null,2))).catch(()=>completion('只讀診斷未完成；沒有修改遊戲存檔。'));\n`;
+// A real iPhone timed out before the experimental SDK probe could complete.
+// Retire that download synchronously; do not start another import or timer.
+const moduleProbe=`// Retired after a real iPhone execution timeout. No network or save access.\ncompletion(JSON.stringify({website:location.hostname,status:'unsupported',gameSaveChanged:false,message:'手機模組連線方式已停用：實測被系統判定逾時。請改用電腦版連線檢查，不用再重跑這個捷徑。'},null,2));\n`;
 fs.writeFileSync(path.join(root,'shortcut/module-probe.js'),moduleProbe);
 for(const item of [...shortcutPackages(probe,runtime),moduleProbePackage(moduleProbe)]){
   fs.writeFileSync(path.join(root,'shortcut',item.basename+'.unsigned.plist'),xmlPlist(item.workflow));

@@ -63,8 +63,8 @@ export function shortcutPackages(probe,runtime) {
 
 export function moduleProbePackage(script){
   const id=uuid('module-probe-js');
-  return {basename:'Poke-Module-Test',workflow:workflow('Poké 模組連線檢查',[
-    action('comment',{WFCommentActionText:'只讀診斷：從已登入的 .com 遊戲頁面分享執行。不需要數字指令，不修改遊戲存檔，不輸出密碼或登入憑證。'}),
+  return {basename:'Poke-Module-Test',workflow:workflow('Poké 模組測試（已停用）',[
+    action('comment',{WFCommentActionText:'手機模組方式已停用：實測被系統判定逾時。請改用電腦版連線檢查。這個版本只立即回報停用狀態，不存取登入狀態或遊戲存檔。'}),
     action('runjavascriptonwebpage',{UUID:id,WFInput:attachment({Type:'ExtensionInput'}),WFJavaScript:script}),
     action('showresult',{Text:textToken(output('JavaScript Result',id))}),
   ],4292093695)};

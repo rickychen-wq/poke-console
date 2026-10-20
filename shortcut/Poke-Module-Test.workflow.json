@@ -1,5 +1,5 @@
 {
-  "WFWorkflowName": "Poké 模組連線檢查",
+  "WFWorkflowName": "Poké 模組測試（已停用）",
   "WFWorkflowClientVersion": "2600.0.0",
   "WFWorkflowMinimumClientVersion": 900,
   "WFWorkflowMinimumClientVersionString": "900",
@@ -22,7 +22,7 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.comment",
       "WFWorkflowActionParameters": {
-        "WFCommentActionText": "只讀診斷：從已登入的 .com 遊戲頁面分享執行。不需要數字指令，不修改遊戲存檔，不輸出密碼或登入憑證。"
+        "WFCommentActionText": "手機模組方式已停用：實測被系統判定逾時。請改用電腦版連線檢查。這個版本只立即回報停用狀態，不存取登入狀態或遊戲存檔。"
       }
     },
     {
@@ -35,7 +35,7 @@
           },
           "WFSerializationType": "WFTextTokenAttachment"
         },
-        "WFJavaScript": "// Diagnostic only: restores this origin's existing Auth session through the\n// official SDK and reads that user's own save. Never calls a game write API.\nconst PUBLIC_GAME_CONFIG={\n  apiKey:'AIzaSyB1LpJcsnT7gj7c8cpRMGjhswLPr8-dnBw',\n  authDomain:'pokesurvivor-free.firebaseapp.com',\n  projectId:'pokesurvivor-free',\n  appId:'1:798271504277:web:dcac4409f969239e87009c',\n};\nasync function loadOfficialSdk(){\n  const [app,auth,store]=await Promise.all([\n    import('https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js'),\n    import('https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js'),\n    import('https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js'),\n  ]);\n  return {app,auth,store};\n}\nasync function runModuleProbe(env,loadSdk=loadOfficialSdk,timeoutMs=9000){\n  const result={website:env.location.hostname,supported:false,pageGlobalAvailable:false,moduleLoaded:false,signedIn:null,cloudReadable:false,stage:'website',message:''};\n  let active=true,timer;\n  const finish=message=>({...result,message});\n  const work=async()=>{\n    result.supported=['pokesurvivor.com','www.pokesurvivor.com'].includes(env.location.hostname);\n    if(!result.supported)return finish('請從 .com 遊戲頁面的 Safari 分享選單執行。');\n    result.pageGlobalAvailable=!!env.window?.firebase;\n    result.stage='module';\n    const sdk=await loadSdk();\n    if(!active)return result;\n    result.moduleLoaded=true;\n    result.stage='session';\n    const existing=sdk.app.getApps().find(app=>app.name==='[DEFAULT]');\n    if(existing&&(existing.options.projectId!==PUBLIC_GAME_CONFIG.projectId||existing.options.apiKey!==PUBLIC_GAME_CONFIG.apiKey))return finish('目前環境的服務設定不同，已停止。');\n    const app=existing||sdk.app.initializeApp(PUBLIC_GAME_CONFIG);\n    let auth;\n    try{\n      auth=sdk.auth.initializeAuth(app,{persistence:[sdk.auth.indexedDBLocalPersistence,sdk.auth.browserLocalPersistence,sdk.auth.browserSessionPersistence]});\n    }catch(error){\n      if(error.code!=='auth/already-initialized')throw error;\n      auth=sdk.auth.getAuth(app);\n    }\n    await auth.authStateReady();\n    if(!active)return result;\n    result.signedIn=!!auth.currentUser;\n    if(!auth.currentUser)return finish('模組可載入，但沒有恢復到這個網站的登入狀態。未讀取或修改存檔。');\n    result.stage='server-read';\n    const reference=sdk.store.doc(sdk.store.getFirestore(app),'saves',auth.currentUser.uid);\n    const snapshot=await sdk.store.getDocFromServer(reference);\n    if(!active)return result;\n    if(!snapshot.exists())return finish('已恢復登入，但目前帳號沒有雲端存檔。未修改資料。');\n    const document=snapshot.data();\n    if(document.ban===true)return finish('帳號已有伺服器限制，已停止。');\n    if(!document.save)return finish('雲端沒有可辨識的存檔。未修改資料。');\n    result.cloudReadable=true;\n    result.stage='complete';\n    const number=n=>Number.isSafeInteger(n)&&n>=0?n:null;\n    result.values={coins:number(document.save.coins),t1:number(document.save.tickets?.t1),t10:number(document.save.tickets?.t10)};\n    return finish('只讀雲端連線成功。這個測試沒有修改存檔；舊操作捷徑仍不能直接使用這個模組。');\n  };\n  try{\n    return await Promise.race([\n      work().catch(error=>{\n        const code=/^[a-z-]+\\/[a-z-]+$/.test(error?.code||'')?error.code:'unavailable';\n        return {...finish('目前環境無法完成這個階段，沒有修改遊戲存檔。'),code};\n      }),\n      new Promise(resolve=>{timer=setTimeout(()=>{active=false;resolve({...finish('只讀測試已逾時停止，沒有修改遊戲存檔。'),code:'timeout'});},timeoutMs);}),\n    ]);\n  }finally{active=false;clearTimeout(timer);}\n}\n\nrunModuleProbe({location,window}).then(result=>completion(JSON.stringify(result,null,2))).catch(()=>completion('只讀診斷未完成；沒有修改遊戲存檔。'));\n"
+        "WFJavaScript": "// Retired after a real iPhone execution timeout. No network or save access.\ncompletion(JSON.stringify({website:location.hostname,status:'unsupported',gameSaveChanged:false,message:'手機模組連線方式已停用：實測被系統判定逾時。請改用電腦版連線檢查，不用再重跑這個捷徑。'},null,2));\n"
       }
     },
     {

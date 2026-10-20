@@ -1,5 +1,7 @@
 // Diagnostic only: restores this origin's existing Auth session through the
 // official SDK and reads that user's own save. Never calls a game write API.
+// Experimental reference only. The iPhone download no longer runs this after a
+// native Shortcuts timeout occurred before its nine-second watchdog returned.
 export const PUBLIC_GAME_CONFIG={
   apiKey:'AIzaSyB1LpJcsnT7gj7c8cpRMGjhswLPr8-dnBw',
   authDomain:'pokesurvivor-free.firebaseapp.com',
