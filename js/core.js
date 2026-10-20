@@ -9,11 +9,6 @@ function setResource(save, asset, value) {
   if (asset === 'c') save.coins = value;
   else { save.tickets ??= {}; save.tickets[asset] = value; }
 }
-export function usernameToEmail(value) {
-  const username = value.trim().toLowerCase();
-  if (!/^[a-z0-9_ñáéíóú]{3,16}$/u.test(username)) throw new Error('請輸入 3–16 字元的遊戲登入名稱，包含英文字母、數字或底線。');
-  return [...new TextEncoder().encode(username)].map(n => n.toString(16).padStart(2,'0')).join('') + '@jugadores.pokesurvivor.net';
-}
 export function validateAmount(value) {
   if (typeof value === 'string' && !/^\d+$/.test(value.trim())) throw new Error('數量必須是零或正整數。');
   const amount = Number(value);

@@ -1,8 +1,8 @@
 // Poké Console — user-invoked Safari shortcut, v1.0.
 // Replace ONLY the placeholder below with the output of the Shortcuts Match Text action.
 // Keep the quotation marks. The Match Text pattern must be ^[0-9]{3,60000}$.
-const digits = 'MATCHED_DIGITS_HERE';
 (async () => {
+const digits = 'MATCHED_DIGITS_HERE';
 const MAX_RESOURCE = 99_999_999;
 const ASSETS = ['c', 't1', 't10'];
 const RESOURCE_LABELS = {c:'金幣',t1:'單抽券',t10:'十連券'};
@@ -13,11 +13,6 @@ const resourceValue = (save, asset) => nonnegative(asset === 'c' ? save.coins : 
 function setResource(save, asset, value) {
   if (asset === 'c') save.coins = value;
   else { save.tickets ??= {}; save.tickets[asset] = value; }
-}
-function usernameToEmail(value) {
-  const username = value.trim().toLowerCase();
-  if (!/^[a-z0-9_ñáéíóú]{3,16}$/u.test(username)) throw new Error('請輸入 3–16 字元的遊戲登入名稱，包含英文字母、數字或底線。');
-  return [...new TextEncoder().encode(username)].map(n => n.toString(16).padStart(2,'0')).join('') + '@jugadores.pokesurvivor.net';
 }
 function validateAmount(value) {
   if (typeof value === 'string' && !/^\d+$/.test(value.trim())) throw new Error('數量必須是零或正整數。');

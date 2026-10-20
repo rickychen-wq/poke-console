@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {applyDraft,emptyDraft,verifyDraft,usernameToEmail,validateAmount,estimateIndexEntries,clone,resourceValue} from '../js/core.js';
+import {applyDraft,emptyDraft,verifyDraft,validateAmount,estimateIndexEntries,clone,resourceValue} from '../js/core.js';
 import {GamePageService,DemoService} from '../js/service.js';
 const catalog=JSON.parse(fs.readFileSync(new URL('../data/catalog.json',import.meta.url),'utf8'));
 const base=()=>({v:3,name:'test',coins:500,tickets:{t1:5,t10:1},owned:{25:{at:1,from:'starter'}},shiny:{},pupg:{25:{hp:2}},stats:{runs:5},profile:{favs:[{dex:25,shiny:false}]},updated:100});
-test('username mapping matches the game, including UTF-8 and normalization',()=>{assert.equal(usernameToEmail(' Test_1 '),'746573745f31@jugadores.pokesurvivor.net');assert.equal(usernameToEmail('NIÑO'),'6e69c3b16f@jugadores.pokesurvivor.net');assert.throws(()=>usernameToEmail('a@b.com'));assert.throws(()=>usernameToEmail('ab'));});
+test('unsupported save versions fail before modification',()=>{const original=base();original.v=4;const before=clone(original);assert.throws(()=>applyDraft(original,{...emptyDraft(),resources:{c:900}},catalog),/版本不相容/);assert.deepEqual(original,before);});
 test('only finite nonnegative whole resource values are accepted',()=>{for(const v of ['','1e6','1.5','-1','Infinity',NaN,100000000])assert.throws(()=>validateAmount(v));assert.equal(validateAmount('0'),0);assert.equal(validateAmount('2000000'),2000000);});
 test('resource updates maintain coin key c, earned/spent counters and all unrelated data',()=>{const original=base();const before=clone(original);const draft={...emptyDraft(),resources:{c:2000000,t1:100,t10:100}};const next=applyDraft(original,draft,catalog,200,'console_test');assert.deepEqual(original,before);assert.deepEqual(next.stats,original.stats);assert.deepEqual(next.profile,original.profile);assert.deepEqual(next.pupg,original.pupg);assert.equal(next.led.base.c[0],500);assert.deepEqual(next.led.console_test.c,[1999500,0]);assert.equal(next.coins,2000000);assert.ok(verifyDraft(next,draft,catalog));});
 test('repeated set operations do not duplicate rewards and lowering records a spend',()=>{const draft={...emptyDraft(),resources:{c:100}};const first=applyDraft(base(),draft,catalog,200,'console_test');assert.deepEqual(first.led.console_test.c,[0,400]);const again=applyDraft(first,draft,catalog,201,'console_test');assert.deepEqual(again.led,first.led);assert.equal(resourceValue(again,'c'),100);});

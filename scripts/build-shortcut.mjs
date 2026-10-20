@@ -11,8 +11,8 @@ const minimal={pokemon:catalog.pokemon.map(m=>({id:m.id,name:m.name})),upgrades:
 const runtime=`// Poké Console — user-invoked Safari shortcut, v1.0.
 // Replace ONLY the placeholder below with the output of the Shortcuts Match Text action.
 // Keep the quotation marks. The Match Text pattern must be ^[0-9]{3,60000}$.
-const digits = 'MATCHED_DIGITS_HERE';
 (async () => {
+const digits = 'MATCHED_DIGITS_HERE';
 ${core}
 ${packet}
 ${service}
