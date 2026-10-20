@@ -1,0 +1,55 @@
+{
+  "WFWorkflowName": "Poké 連線測試",
+  "WFWorkflowClientVersion": "2600.0.0",
+  "WFWorkflowMinimumClientVersion": 900,
+  "WFWorkflowMinimumClientVersionString": "900",
+  "WFWorkflowIcon": {
+    "WFWorkflowIconStartColor": 4292093695,
+    "WFWorkflowIconGlyphNumber": 59511
+  },
+  "WFWorkflowTypes": [
+    "ActionExtension"
+  ],
+  "WFQuickActionSurfaces": [],
+  "WFWorkflowInputContentItemClasses": [
+    "WFSafariWebPageContentItem"
+  ],
+  "WFWorkflowOutputContentItemClasses": [],
+  "WFWorkflowHasShortcutInputVariables": true,
+  "WFWorkflowHasOutputFallback": false,
+  "WFWorkflowImportQuestions": [],
+  "WFWorkflowActions": [
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.comment",
+      "WFWorkflowActionParameters": {
+        "WFCommentActionText": "只讀測試，不修改存檔。從已登入的 pokesurvivor.com 主選單，用 Safari 分享選單執行。supported、gameService、signedIn 都是 true 才能繼續。"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.runjavascriptonwebpage",
+      "WFWorkflowActionParameters": {
+        "UUID": "7F3768E6-20CD-45EB-A5D3-177AF2BA92E6",
+        "WFInput": {
+          "Value": {
+            "Type": "ExtensionInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFJavaScript": "// Read-only: no save is modified, no credentials are returned.\nconst supported=['pokesurvivor.com','www.pokesurvivor.com'].includes(location.hostname);\nconst available=!!window.firebase && typeof window.firebase.auth==='function';\ncompletion({website:location.hostname,supported,gameService:available,signedIn:available?!!window.firebase.auth().currentUser:false,message:!supported?'請在 .com 遊戲頁執行。':!available?'這個捷徑環境看不到遊戲服務；不要執行寫入指令。':'可讀取遊戲服務。'});\n"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.showresult",
+      "WFWorkflowActionParameters": {
+        "Text": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "7F3768E6-20CD-45EB-A5D3-177AF2BA92E6",
+            "OutputName": "JavaScript Result"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    }
+  ]
+}

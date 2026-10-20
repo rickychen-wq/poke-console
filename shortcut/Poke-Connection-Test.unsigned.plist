@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>WFWorkflowName</key>
+  <string>Poké 連線測試</string>
+  <key>WFWorkflowClientVersion</key>
+  <string>2600.0.0</string>
+  <key>WFWorkflowMinimumClientVersion</key>
+  <integer>900</integer>
+  <key>WFWorkflowMinimumClientVersionString</key>
+  <string>900</string>
+  <key>WFWorkflowIcon</key>
+  <dict>
+    <key>WFWorkflowIconStartColor</key>
+    <integer>4292093695</integer>
+    <key>WFWorkflowIconGlyphNumber</key>
+    <integer>59511</integer>
+  </dict>
+  <key>WFWorkflowTypes</key>
+  <array>
+    <string>ActionExtension</string>
+  </array>
+  <key>WFQuickActionSurfaces</key>
+  <array>
+
+  </array>
+  <key>WFWorkflowInputContentItemClasses</key>
+  <array>
+    <string>WFSafariWebPageContentItem</string>
+  </array>
+  <key>WFWorkflowOutputContentItemClasses</key>
+  <array>
+
+  </array>
+  <key>WFWorkflowHasShortcutInputVariables</key>
+  <true/>
+  <key>WFWorkflowHasOutputFallback</key>
+  <false/>
+  <key>WFWorkflowImportQuestions</key>
+  <array>
+
+  </array>
+  <key>WFWorkflowActions</key>
+  <array>
+    <dict>
+      <key>WFWorkflowActionIdentifier</key>
+      <string>is.workflow.actions.comment</string>
+      <key>WFWorkflowActionParameters</key>
+      <dict>
+        <key>WFCommentActionText</key>
+        <string>只讀測試，不修改存檔。從已登入的 pokesurvivor.com 主選單，用 Safari 分享選單執行。supported、gameService、signedIn 都是 true 才能繼續。</string>
+      </dict>
+    </dict>
+    <dict>
+      <key>WFWorkflowActionIdentifier</key>
+      <string>is.workflow.actions.runjavascriptonwebpage</string>
+      <key>WFWorkflowActionParameters</key>
+      <dict>
+        <key>UUID</key>
+        <string>7F3768E6-20CD-45EB-A5D3-177AF2BA92E6</string>
+        <key>WFInput</key>
+        <dict>
+          <key>Value</key>
+          <dict>
+            <key>Type</key>
+            <string>ExtensionInput</string>
+          </dict>
+          <key>WFSerializationType</key>
+          <string>WFTextTokenAttachment</string>
+        </dict>
+        <key>WFJavaScript</key>
+        <string>// Read-only: no save is modified, no credentials are returned.
+const supported=[&apos;pokesurvivor.com&apos;,&apos;www.pokesurvivor.com&apos;].includes(location.hostname);
+const available=!!window.firebase &amp;&amp; typeof window.firebase.auth===&apos;function&apos;;
+completion({website:location.hostname,supported,gameService:available,signedIn:available?!!window.firebase.auth().currentUser:false,message:!supported?&apos;請在 .com 遊戲頁執行。&apos;:!available?&apos;這個捷徑環境看不到遊戲服務；不要執行寫入指令。&apos;:&apos;可讀取遊戲服務。&apos;});
+</string>
+      </dict>
+    </dict>
+    <dict>
+      <key>WFWorkflowActionIdentifier</key>
+      <string>is.workflow.actions.showresult</string>
+      <key>WFWorkflowActionParameters</key>
+      <dict>
+        <key>Text</key>
+        <dict>
+          <key>Value</key>
+          <dict>
+            <key>Type</key>
+            <string>ActionOutput</string>
+            <key>OutputUUID</key>
+            <string>7F3768E6-20CD-45EB-A5D3-177AF2BA92E6</string>
+            <key>OutputName</key>
+            <string>JavaScript Result</string>
+          </dict>
+          <key>WFSerializationType</key>
+          <string>WFTextTokenAttachment</string>
+        </dict>
+      </dict>
+    </dict>
+  </array>
+</dict>
+</plist>

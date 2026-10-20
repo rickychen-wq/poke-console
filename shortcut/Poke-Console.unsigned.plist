@@ -1,0 +1,389 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>WFWorkflowName</key>
+  <string>Poké Console</string>
+  <key>WFWorkflowClientVersion</key>
+  <string>2600.0.0</string>
+  <key>WFWorkflowMinimumClientVersion</key>
+  <integer>900</integer>
+  <key>WFWorkflowMinimumClientVersionString</key>
+  <string>900</string>
+  <key>WFWorkflowIcon</key>
+  <dict>
+    <key>WFWorkflowIconStartColor</key>
+    <integer>4282601983</integer>
+    <key>WFWorkflowIconGlyphNumber</key>
+    <integer>59511</integer>
+  </dict>
+  <key>WFWorkflowTypes</key>
+  <array>
+    <string>ActionExtension</string>
+  </array>
+  <key>WFQuickActionSurfaces</key>
+  <array>
+
+  </array>
+  <key>WFWorkflowInputContentItemClasses</key>
+  <array>
+    <string>WFSafariWebPageContentItem</string>
+  </array>
+  <key>WFWorkflowOutputContentItemClasses</key>
+  <array>
+
+  </array>
+  <key>WFWorkflowHasShortcutInputVariables</key>
+  <true/>
+  <key>WFWorkflowHasOutputFallback</key>
+  <false/>
+  <key>WFWorkflowImportQuestions</key>
+  <array>
+
+  </array>
+  <key>WFWorkflowActions</key>
+  <array>
+    <dict>
+      <key>WFWorkflowActionIdentifier</key>
+      <string>is.workflow.actions.comment</string>
+      <key>WFWorkflowActionParameters</key>
+      <dict>
+        <key>WFCommentActionText</key>
+        <string>從已登入的 pokesurvivor.com 主選單，使用 Safari 分享選單執行。先複製控制台產生的數字指令。請先通過「Poké 連線測試」。不收帳密。原始碼：https://github.com/rickychen-wq/poke-console</string>
+      </dict>
+    </dict>
+    <dict>
+      <key>WFWorkflowActionIdentifier</key>
+      <string>is.workflow.actions.getclipboard</string>
+      <key>WFWorkflowActionParameters</key>
+      <dict>
+        <key>UUID</key>
+        <string>6657B5E0-CA02-4E3D-A3F8-336D0FC136A1</string>
+      </dict>
+    </dict>
+    <dict>
+      <key>WFWorkflowActionIdentifier</key>
+      <string>is.workflow.actions.text.match</string>
+      <key>WFWorkflowActionParameters</key>
+      <dict>
+        <key>UUID</key>
+        <string>367D9A2F-A39B-4969-A00D-8264094BC57F</string>
+        <key>WFMatchTextPattern</key>
+        <string>^[0-9]{3,60000}$</string>
+        <key>WFMatchTextCaseSensitive</key>
+        <true/>
+        <key>WFInput</key>
+        <dict>
+          <key>Value</key>
+          <dict>
+            <key>Type</key>
+            <string>ActionOutput</string>
+            <key>OutputUUID</key>
+            <string>6657B5E0-CA02-4E3D-A3F8-336D0FC136A1</string>
+            <key>OutputName</key>
+            <string>Clipboard</string>
+          </dict>
+          <key>WFSerializationType</key>
+          <string>WFTextTokenAttachment</string>
+        </dict>
+      </dict>
+    </dict>
+    <dict>
+      <key>WFWorkflowActionIdentifier</key>
+      <string>is.workflow.actions.runjavascriptonwebpage</string>
+      <key>WFWorkflowActionParameters</key>
+      <dict>
+        <key>UUID</key>
+        <string>BA88A305-A887-4877-AB32-991AFD48A939</string>
+        <key>WFInput</key>
+        <dict>
+          <key>Value</key>
+          <dict>
+            <key>Type</key>
+            <string>ExtensionInput</string>
+          </dict>
+          <key>WFSerializationType</key>
+          <string>WFTextTokenAttachment</string>
+        </dict>
+        <key>WFJavaScript</key>
+        <dict>
+          <key>Value</key>
+          <dict>
+            <key>string</key>
+            <string>// Poké Console — user-invoked Safari shortcut, v1.0.
+// Replace ONLY the placeholder below with the output of the Shortcuts Match Text action.
+// Keep the quotation marks. The Match Text pattern must be ^[0-9]{3,60000}$.
+(async () =&gt; {
+const digits = &apos;￼&apos;;
+const MAX_RESOURCE = 99_999_999;
+const ASSETS = [&apos;c&apos;, &apos;t1&apos;, &apos;t10&apos;];
+const RESOURCE_LABELS = {c:&apos;金幣&apos;,t1:&apos;單抽券&apos;,t10:&apos;十連券&apos;};
+const plain = v =&gt; v !== null &amp;&amp; typeof v === &apos;object&apos; &amp;&amp; !Array.isArray(v);
+const clone = value =&gt; JSON.parse(JSON.stringify(value));
+const nonnegative = v =&gt; Number.isSafeInteger(v) &amp;&amp; v &gt;= 0 ? v : 0;
+const resourceValue = (save, asset) =&gt; nonnegative(asset === &apos;c&apos; ? save.coins : save.tickets?.[asset]);
+function setResource(save, asset, value) {
+  if (asset === &apos;c&apos;) save.coins = value;
+  else { save.tickets ??= {}; save.tickets[asset] = value; }
+}
+function validateAmount(value) {
+  if (typeof value === &apos;string&apos; &amp;&amp; !/^\d+$/.test(value.trim())) throw new Error(&apos;數量必須是零或正整數。&apos;);
+  const amount = Number(value);
+  if (!Number.isSafeInteger(amount) || amount &lt; 0 || amount &gt; MAX_RESOURCE) throw new Error(&apos;數量範圍是 0–99,999,999。&apos;);
+  return amount;
+}
+function emptyDraft() { return {resources:{},unlock:[],shiny:[],max:[]}; }
+function draftCount(draft) {
+  return Object.keys(draft.resources).length + draft.unlock.length + draft.shiny.length + draft.max.length;
+}
+function validateLedger(ledger) {
+  if (!plain(ledger)) throw new Error(&apos;遊戲收支紀錄格式不相容，已停止寫入。&apos;);
+  for (const entry of Object.values(ledger)) {
+    if (!plain(entry)) throw new Error(&apos;遊戲收支紀錄格式不相容，已停止寫入。&apos;);
+    for (const asset of ASSETS) {
+      const pair = entry[asset];
+      if (pair === undefined) continue;
+      if (!Array.isArray(pair) || pair.length !== 2 || pair.some(n =&gt; !Number.isSafeInteger(n) || n &lt; 0)) throw new Error(&apos;收支紀錄含有異常數值，已停止寫入。&apos;);
+    }
+  }
+}
+function balance(ledger, asset) {
+  let total = 0;
+  for (const entry of Object.values(ledger)) {
+    total += (entry[asset]?.[0] || 0) - (entry[asset]?.[1] || 0);
+    if (!Number.isSafeInteger(total)) throw new Error(&apos;收支紀錄超過安全數值範圍。&apos;);
+  }
+  return total;
+}
+function adjustment(ledger, key, asset, amount) {
+  if (!amount) return;
+  ledger[key] ??= {};
+  ledger[key][asset] ??= [0,0];
+  const index = amount &gt; 0 ? 0 : 1;
+  const next = ledger[key][asset][index] + Math.abs(amount);
+  if (!Number.isSafeInteger(next)) throw new Error(&apos;收支紀錄超過安全數值範圍。&apos;);
+  ledger[key][asset][index] = next;
+}
+// Keep the game&apos;s grow-only earned/spent counters consistent with the displayed amounts.
+function reconcileLedger(save, key) {
+  if (save.led === undefined) {
+    save.led = {base:Object.fromEntries(ASSETS.map(a =&gt; [a,[resourceValue(save,a),0]]))};
+  } else {
+    validateLedger(save.led);
+    for (const asset of ASSETS) adjustment(save.led,key,asset,resourceValue(save,asset)-balance(save.led,asset));
+  }
+}
+function estimateIndexEntries(value) {
+  if (Array.isArray(value)) return value.length + value.reduce((n,v)=&gt;n+(plain(v)||Array.isArray(v)?estimateIndexEntries(v):0),0);
+  if (!plain(value)) return 2;
+  return Object.values(value).reduce((n,v)=&gt;n + 2 + (plain(v)||Array.isArray(v)?estimateIndexEntries(v):0),0);
+}
+function assertFirestoreValues(value, depth=0) {
+  if (depth &gt; 18) throw new Error(&apos;存檔巢狀層級過深，已停止寫入。&apos;);
+  if (typeof value === &apos;number&apos; &amp;&amp; !Number.isFinite(value)) throw new Error(&apos;存檔含有無效數值。&apos;);
+  if (Array.isArray(value)) {
+    if (value.some(Array.isArray)) throw new Error(&apos;存檔含有不相容的巢狀陣列。&apos;);
+    value.forEach(v=&gt;assertFirestoreValues(v,depth+1));
+  } else if (plain(value)) {
+    for (const [key,v] of Object.entries(value)) {
+      if (/^__.*__$/.test(key)) throw new Error(&apos;存檔含有保留欄位名稱。&apos;);
+      assertFirestoreValues(v,depth+1);
+    }
+  }
+}
+function assertSafeSave(save) {
+  assertFirestoreValues(save);
+  const bytes = new TextEncoder().encode(JSON.stringify(save)).length;
+  const estimatedEntries = estimateIndexEntries({save});
+  if (bytes &gt; 700_000) throw new Error(&apos;存檔太大，已停止寫入。請減少這次的修改。&apos;);
+  if (estimatedEntries &gt; 30_000) throw new Error(&apos;索引預估接近上限，已停止寫入。請減少滿級角色數量。&apos;);
+  return {bytes,estimatedEntries};
+}
+function applyDraft(source, draft, catalog, now=Date.now(), deviceKey=&apos;console_v1&apos;) {
+  if (!plain(source) || source.v !== 3) throw new Error(&apos;目前存檔版本不相容，已停止寫入。&apos;);
+  if (!/^[a-zA-Z0-9_-]{1,40}$/.test(deviceKey)) throw new Error(&apos;無效的裝置識別。&apos;);
+  const save = clone(source);
+  const byId = new Map(catalog.pokemon.map(m=&gt;[m.id,m]));
+  const ids = list =&gt; [...new Set(list)].map(id=&gt;{
+    if (!Number.isInteger(id) || !byId.has(id)) throw new Error(&apos;修改清單含有不存在的寶可夢。&apos;);
+    return id;
+  });
+  const resources = Object.entries(draft.resources);
+  if (resources.some(([key])=&gt;!ASSETS.includes(key))) throw new Error(&apos;修改清單含有不支援的資源。&apos;);
+  if (resources.length) {
+    reconcileLedger(save,deviceKey);
+    for (const [asset,value] of resources) {
+      const target = validateAmount(value);
+      adjustment(save.led,deviceKey,asset,target-balance(save.led,asset));
+      setResource(save,asset,target);
+    }
+  }
+  const unlock=ids(draft.unlock), shiny=ids(draft.shiny), max=ids(draft.max);
+  if (unlock.length || shiny.length) { save.owned ??= {}; save.shiny ??= {}; }
+  for (const id of [...unlock,...shiny]) save.owned[id] ??= {at:now,from:&apos;manual&apos;};
+  for (const id of shiny) save.shiny[id] ??= {at:now,from:&apos;manual&apos;};
+  if (max.length) save.pupg ??= {};
+  for (const id of max) {
+    if (!save.owned?.[id]) throw new Error(`請先解鎖 ${byId.get(id).name}，或一起加入解鎖清單。`);
+    save.pupg[id] ??= {};
+    for (const upgrade of catalog.upgrades) save.pupg[id][upgrade.id] = upgrade.max;
+  }
+  save.updated = Math.max(now,(source.updated || 0)+1);
+  assertSafeSave(save);
+  return save;
+}
+function verifyDraft(save,draft,catalog) {
+  for (const [asset,target] of Object.entries(draft.resources)) if (resourceValue(save,asset)!==Number(target)) return false;
+  for (const id of draft.unlock) if (!save.owned?.[id]) return false;
+  for (const id of draft.shiny) if (!save.owned?.[id] || !save.shiny?.[id]) return false;
+  for (const id of draft.max) for (const u of catalog.upgrades) if (save.pupg?.[id]?.[u.id]!==u.max) return false;
+  return true;
+}
+function saveSummary(save,catalog) {
+  const owned = catalog.pokemon.filter(m=&gt;save.owned?.[m.id]).length;
+  const shiny = catalog.pokemon.filter(m=&gt;save.shiny?.[m.id]).length;
+  const maxed = catalog.pokemon.filter(m=&gt;save.owned?.[m.id] &amp;&amp; catalog.upgrades.every(u=&gt;save.pupg?.[m.id]?.[u.id]===u.max)).length;
+  return {coins:resourceValue(save,&apos;c&apos;),t1:resourceValue(save,&apos;t1&apos;),t10:resourceValue(save,&apos;t10&apos;),owned,shiny,maxed};
+}
+function friendlyError(error) {
+  const code=error?.code || &apos;&apos;;
+  const messages={
+    &apos;auth/invalid-credential&apos;:&apos;帳號或密碼不正確。請使用 pokesurvivor.com 的登入名稱。&apos;,
+    &apos;auth/invalid-login-credentials&apos;:&apos;帳號或密碼不正確。&apos;,
+    &apos;auth/wrong-password&apos;:&apos;帳號或密碼不正確。&apos;,
+    &apos;auth/user-not-found&apos;:&apos;帳號或密碼不正確。&apos;,
+    &apos;auth/too-many-requests&apos;:&apos;登入嘗試太頻繁，請稍後再試。&apos;,
+    &apos;auth/network-request-failed&apos;:&apos;登入服務連線失敗，請檢查網路或稍後再試。&apos;,
+    &apos;auth/operation-not-allowed&apos;:&apos;遊戲目前未允許此登入方式。&apos;,
+    &apos;auth/unauthorized-domain&apos;:&apos;遊戲未允許這個網域登入，控制台無法代為解除。&apos;,
+    &apos;auth/app-not-authorized&apos;:&apos;遊戲拒絕從這個網站驗證，控制台無法代為解除。&apos;,
+    &apos;permission-denied&apos;:&apos;遊戲伺服器拒絕存檔存取。請確認帳號；控制台不能解除伺服器權限。&apos;,
+    &apos;unavailable&apos;:&apos;雲端暫時無法連線，這次尚未確認保存。&apos;,
+    &apos;resource-exhausted&apos;:&apos;遊戲服務的使用額度暫時用完，請稍後再試。&apos;,
+    &apos;aborted&apos;:&apos;另一個裝置同時修改了存檔，請重新讀取後再試。&apos;
+  };
+  if(code===&apos;invalid-argument&apos; &amp;&amp; /index/i.test(error.message||&apos;&apos;)) return &apos;存檔超過索引限制。請減少滿級角色數量；分批寫入無法解除總量限制。&apos;;
+  return messages[code] || error?.message || &apos;操作未完成，請稍後重試。&apos;;
+}
+
+function encodePacket(draft) {
+  const data={version:1,draft:clone(draft)};
+  return [...new TextEncoder().encode(JSON.stringify(data))].map(n=&gt;String(n).padStart(3,&apos;0&apos;)).join(&apos;&apos;);
+}
+function decodePacket(digits) {
+  if(!/^\d{3,60000}$/.test(digits) || digits.length%3) throw new Error(&apos;指令格式不正確。請重新複製控制台產生的數字指令。&apos;);
+  const values=[];
+  for(let i=0;i&lt;digits.length;i+=3){const v=Number(digits.slice(i,i+3));if(v&gt;255)throw new Error(&apos;無效指令編碼。&apos;);values.push(v);}
+  const data=JSON.parse(new TextDecoder().decode(new Uint8Array(values)));
+  if(data.version!==1 || !data.draft || Object.keys(data).some(k=&gt;![&apos;version&apos;,&apos;draft&apos;].includes(k))) throw new Error(&apos;不支援的指令版本。&apos;);
+  const raw=data.draft,plan=emptyDraft();
+  if(Object.keys(raw).some(k=&gt;![&apos;resources&apos;,&apos;unlock&apos;,&apos;shiny&apos;,&apos;max&apos;].includes(k))) throw new Error(&apos;指令包含不支援的操作。&apos;);
+  if(!raw.resources || Array.isArray(raw.resources)) throw new Error(&apos;資源指令格式不正確。&apos;);
+  for(const [key,value]of Object.entries(raw.resources)){
+    if(![&apos;c&apos;,&apos;t1&apos;,&apos;t10&apos;].includes(key)||!Number.isSafeInteger(value)||value&lt;0||value&gt;MAX_RESOURCE)throw new Error(&apos;資源指令格式不正確。&apos;);
+    plan.resources[key]=value;
+  }
+  for(const key of [&apos;unlock&apos;,&apos;shiny&apos;,&apos;max&apos;]){
+    if(!Array.isArray(raw[key])||raw[key].length&gt;966||raw[key].some(id=&gt;!Number.isInteger(id)||id&lt;1||id&gt;2000))throw new Error(&apos;角色指令格式不正確。&apos;);
+    plan[key]=[...new Set(raw[key])];
+  }
+  return plan;
+}
+
+class GamePageService {
+  constructor(firebase) {
+    this.firebase=firebase;
+    this.auth=firebase.auth();
+    this.db=firebase.firestore();
+    this.user=this.auth.currentUser;
+    if(!this.user) throw new Error(&apos;請先在遊戲頁面登入自己的帳號。&apos;);
+  }
+  reference() {
+    if(!this.user || this.user.uid!==this.auth.currentUser?.uid) throw new Error(&apos;帳號已變更，已停止操作。&apos;);
+    return this.db.collection(&apos;saves&apos;).doc(this.user.uid);
+  }
+  async read() {
+    const snapshot=await this.reference().get({source:&apos;server&apos;});
+    if(!snapshot.exists || !snapshot.data().save) throw new Error(&apos;雲端存檔不存在，請先完成遊戲初始夥伴並儲存。&apos;);
+    if(snapshot.data().ban===true) throw new Error(&apos;伺服器已標記此帳號，已停止操作。&apos;);
+    return clone(snapshot.data().save);
+  }
+  async write(draft,catalog,deviceKey) {
+    const ref=this.reference();
+    let original;
+    await this.db.runTransaction(async transaction=&gt;{
+      const snapshot=await transaction.get(ref);
+      if(!snapshot.exists) throw new Error(&apos;雲端存檔不存在，已停止寫入。&apos;);
+      const document=snapshot.data();
+      if(document.ban===true) throw new Error(&apos;伺服器已標記此帳號，已停止寫入。&apos;);
+      original=clone(document.save);
+      const next=applyDraft(original,draft,catalog,Date.now(),deviceKey);
+      transaction.update(ref,{save:next,updatedAt:this.firebase.firestore.FieldValue.serverTimestamp()});
+    });
+    const saved=await this.read();
+    if(!verifyDraft(saved,draft,catalog)) {
+      const error=new Error(&apos;伺服器已接受寫入，但回讀數值不符。請關閉其他遊戲頁面，再重新讀取。&apos;);
+      error.committed=true;
+      error.backup=original;
+      throw error;
+    }
+    return {save:saved,backup:original};
+  }
+}
+
+  if (![&apos;pokesurvivor.com&apos;,&apos;www.pokesurvivor.com&apos;].includes(location.hostname)) throw new Error(&apos;請在 pokesurvivor.com 遊戲頁面分享執行，不是在 GitHub 網頁執行。&apos;);
+  if (!window.firebase || typeof window.firebase.auth !== &apos;function&apos; || typeof window.firebase.firestore !== &apos;function&apos;) throw new Error(&apos;捷徑目前看不到遊戲服務，已停止；沒有修改存檔。請先完成網頁連線測試。&apos;);
+  const draft=decodePacket(digits);
+  if (!draftCount(draft)) throw new Error(&apos;指令裡沒有任何修改。&apos;);
+  const service=new GamePageService(window.firebase);
+  const last=Number(localStorage.getItem(&apos;ps.cloudok.&apos;+service.user.uid)||0);
+  if (Date.now()-last&lt;65000) throw new Error(&apos;遊戲剛儲存過，請等待 &apos;+Math.ceil((65000-(Date.now()-last))/1000)+&apos; 秒再執行。&apos;);
+  const catalog={&quot;pokemon&quot;:[{&quot;id&quot;:1,&quot;name&quot;:&quot;妙蛙種子&quot;},{&quot;id&quot;:2,&quot;name&quot;:&quot;妙蛙草&quot;},{&quot;id&quot;:3,&quot;name&quot;:&quot;妙蛙花&quot;},{&quot;id&quot;:4,&quot;name&quot;:&quot;小火龍&quot;},{&quot;id&quot;:5,&quot;name&quot;:&quot;火恐龍&quot;},{&quot;id&quot;:6,&quot;name&quot;:&quot;噴火龍&quot;},{&quot;id&quot;:7,&quot;name&quot;:&quot;傑尼龜&quot;},{&quot;id&quot;:8,&quot;name&quot;:&quot;卡咪龜&quot;},{&quot;id&quot;:9,&quot;name&quot;:&quot;水箭龜&quot;},{&quot;id&quot;:10,&quot;name&quot;:&quot;綠毛蟲&quot;},{&quot;id&quot;:11,&quot;name&quot;:&quot;鐵甲蛹&quot;},{&quot;id&quot;:12,&quot;name&quot;:&quot;巴大蝶&quot;},{&quot;id&quot;:13,&quot;name&quot;:&quot;獨角蟲&quot;},{&quot;id&quot;:14,&quot;name&quot;:&quot;鐵殼蛹&quot;},{&quot;id&quot;:15,&quot;name&quot;:&quot;大針蜂&quot;},{&quot;id&quot;:16,&quot;name&quot;:&quot;波波&quot;},{&quot;id&quot;:17,&quot;name&quot;:&quot;比比鳥&quot;},{&quot;id&quot;:18,&quot;name&quot;:&quot;大比鳥&quot;},{&quot;id&quot;:19,&quot;name&quot;:&quot;小拉達&quot;},{&quot;id&quot;:20,&quot;name&quot;:&quot;拉達&quot;},{&quot;id&quot;:21,&quot;name&quot;:&quot;烈雀&quot;},{&quot;id&quot;:22,&quot;name&quot;:&quot;大嘴雀&quot;},{&quot;id&quot;:23,&quot;name&quot;:&quot;阿柏蛇&quot;},{&quot;id&quot;:24,&quot;name&quot;:&quot;阿柏怪&quot;},{&quot;id&quot;:25,&quot;name&quot;:&quot;皮卡丘&quot;},{&quot;id&quot;:26,&quot;name&quot;:&quot;雷丘&quot;},{&quot;id&quot;:27,&quot;name&quot;:&quot;穿山鼠&quot;},{&quot;id&quot;:28,&quot;name&quot;:&quot;穿山王&quot;},{&quot;id&quot;:29,&quot;name&quot;:&quot;尼多蘭&quot;},{&quot;id&quot;:30,&quot;name&quot;:&quot;尼多娜&quot;},{&quot;id&quot;:31,&quot;name&quot;:&quot;尼多后&quot;},{&quot;id&quot;:32,&quot;name&quot;:&quot;尼多朗&quot;},{&quot;id&quot;:33,&quot;name&quot;:&quot;尼多力諾&quot;},{&quot;id&quot;:34,&quot;name&quot;:&quot;尼多王&quot;},{&quot;id&quot;:35,&quot;name&quot;:&quot;皮皮&quot;},{&quot;id&quot;:36,&quot;name&quot;:&quot;皮可西&quot;},{&quot;id&quot;:37,&quot;name&quot;:&quot;六尾&quot;},{&quot;id&quot;:38,&quot;name&quot;:&quot;九尾&quot;},{&quot;id&quot;:39,&quot;name&quot;:&quot;胖丁&quot;},{&quot;id&quot;:40,&quot;name&quot;:&quot;胖可丁&quot;},{&quot;id&quot;:41,&quot;name&quot;:&quot;超音蝠&quot;},{&quot;id&quot;:42,&quot;name&quot;:&quot;大嘴蝠&quot;},{&quot;id&quot;:43,&quot;name&quot;:&quot;走路草&quot;},{&quot;id&quot;:44,&quot;name&quot;:&quot;臭臭花&quot;},{&quot;id&quot;:45,&quot;name&quot;:&quot;霸王花&quot;},{&quot;id&quot;:46,&quot;name&quot;:&quot;派拉斯&quot;},{&quot;id&quot;:47,&quot;name&quot;:&quot;派拉斯特&quot;},{&quot;id&quot;:48,&quot;name&quot;:&quot;毛球&quot;},{&quot;id&quot;:49,&quot;name&quot;:&quot;摩魯蛾&quot;},{&quot;id&quot;:50,&quot;name&quot;:&quot;地鼠&quot;},{&quot;id&quot;:51,&quot;name&quot;:&quot;三地鼠&quot;},{&quot;id&quot;:52,&quot;name&quot;:&quot;喵喵&quot;},{&quot;id&quot;:53,&quot;name&quot;:&quot;貓老大&quot;},{&quot;id&quot;:54,&quot;name&quot;:&quot;可達鴨&quot;},{&quot;id&quot;:55,&quot;name&quot;:&quot;哥達鴨&quot;},{&quot;id&quot;:56,&quot;name&quot;:&quot;猴怪&quot;},{&quot;id&quot;:57,&quot;name&quot;:&quot;火爆猴&quot;},{&quot;id&quot;:58,&quot;name&quot;:&quot;卡蒂狗&quot;},{&quot;id&quot;:59,&quot;name&quot;:&quot;風速狗&quot;},{&quot;id&quot;:60,&quot;name&quot;:&quot;蚊香蝌蚪&quot;},{&quot;id&quot;:61,&quot;name&quot;:&quot;蚊香君&quot;},{&quot;id&quot;:62,&quot;name&quot;:&quot;蚊香泳士&quot;},{&quot;id&quot;:63,&quot;name&quot;:&quot;凱西&quot;},{&quot;id&quot;:64,&quot;name&quot;:&quot;勇基拉&quot;},{&quot;id&quot;:65,&quot;name&quot;:&quot;胡地&quot;},{&quot;id&quot;:66,&quot;name&quot;:&quot;腕力&quot;},{&quot;id&quot;:67,&quot;name&quot;:&quot;豪力&quot;},{&quot;id&quot;:68,&quot;name&quot;:&quot;怪力&quot;},{&quot;id&quot;:69,&quot;name&quot;:&quot;喇叭芽&quot;},{&quot;id&quot;:70,&quot;name&quot;:&quot;口呆花&quot;},{&quot;id&quot;:71,&quot;name&quot;:&quot;大食花&quot;},{&quot;id&quot;:72,&quot;name&quot;:&quot;瑪瑙水母&quot;},{&quot;id&quot;:73,&quot;name&quot;:&quot;毒刺水母&quot;},{&quot;id&quot;:74,&quot;name&quot;:&quot;小拳石&quot;},{&quot;id&quot;:75,&quot;name&quot;:&quot;隆隆石&quot;},{&quot;id&quot;:76,&quot;name&quot;:&quot;隆隆岩&quot;},{&quot;id&quot;:77,&quot;name&quot;:&quot;小火馬&quot;},{&quot;id&quot;:78,&quot;name&quot;:&quot;烈焰馬&quot;},{&quot;id&quot;:79,&quot;name&quot;:&quot;呆呆獸&quot;},{&quot;id&quot;:80,&quot;name&quot;:&quot;呆殼獸&quot;},{&quot;id&quot;:81,&quot;name&quot;:&quot;小磁怪&quot;},{&quot;id&quot;:82,&quot;name&quot;:&quot;三合一磁怪&quot;},{&quot;id&quot;:83,&quot;name&quot;:&quot;大蔥鴨&quot;},{&quot;id&quot;:84,&quot;name&quot;:&quot;嘟嘟&quot;},{&quot;id&quot;:85,&quot;name&quot;:&quot;嘟嘟利&quot;},{&quot;id&quot;:86,&quot;name&quot;:&quot;小海獅&quot;},{&quot;id&quot;:87,&quot;name&quot;:&quot;白海獅&quot;},{&quot;id&quot;:88,&quot;name&quot;:&quot;臭泥&quot;},{&quot;id&quot;:89,&quot;name&quot;:&quot;臭臭泥&quot;},{&quot;id&quot;:90,&quot;name&quot;:&quot;大舌貝&quot;},{&quot;id&quot;:91,&quot;name&quot;:&quot;刺甲貝&quot;},{&quot;id&quot;:92,&quot;name&quot;:&quot;鬼斯&quot;},{&quot;id&quot;:93,&quot;name&quot;:&quot;鬼斯通&quot;},{&quot;id&quot;:94,&quot;name&quot;:&quot;耿鬼&quot;},{&quot;id&quot;:95,&quot;name&quot;:&quot;大岩蛇&quot;},{&quot;id&quot;:96,&quot;name&quot;:&quot;催眠貘&quot;},{&quot;id&quot;:97,&quot;name&quot;:&quot;引夢貘人&quot;},{&quot;id&quot;:98,&quot;name&quot;:&quot;大鉗蟹&quot;},{&quot;id&quot;:99,&quot;name&quot;:&quot;巨鉗蟹&quot;},{&quot;id&quot;:100,&quot;name&quot;:&quot;霹靂電球&quot;},{&quot;id&quot;:101,&quot;name&quot;:&quot;頑皮雷彈&quot;},{&quot;id&quot;:102,&quot;name&quot;:&quot;蛋蛋&quot;},{&quot;id&quot;:103,&quot;name&quot;:&quot;椰蛋樹&quot;},{&quot;id&quot;:104,&quot;name&quot;:&quot;卡拉卡拉&quot;},{&quot;id&quot;:105,&quot;name&quot;:&quot;嘎啦嘎啦&quot;},{&quot;id&quot;:106,&quot;name&quot;:&quot;飛腿郎&quot;},{&quot;id&quot;:107,&quot;name&quot;:&quot;快拳郎&quot;},{&quot;id&quot;:108,&quot;name&quot;:&quot;大舌頭&quot;},{&quot;id&quot;:109,&quot;name&quot;:&quot;瓦斯彈&quot;},{&quot;id&quot;:110,&quot;name&quot;:&quot;雙彈瓦斯&quot;},{&quot;id&quot;:111,&quot;name&quot;:&quot;獨角犀牛&quot;},{&quot;id&quot;:112,&quot;name&quot;:&quot;鑽角犀獸&quot;},{&quot;id&quot;:113,&quot;name&quot;:&quot;吉利蛋&quot;},{&quot;id&quot;:114,&quot;name&quot;:&quot;蔓藤怪&quot;},{&quot;id&quot;:115,&quot;name&quot;:&quot;袋獸&quot;},{&quot;id&quot;:116,&quot;name&quot;:&quot;墨海馬&quot;},{&quot;id&quot;:117,&quot;name&quot;:&quot;海刺龍&quot;},{&quot;id&quot;:118,&quot;name&quot;:&quot;角金魚&quot;},{&quot;id&quot;:119,&quot;name&quot;:&quot;金魚王&quot;},{&quot;id&quot;:120,&quot;name&quot;:&quot;海星星&quot;},{&quot;id&quot;:121,&quot;name&quot;:&quot;寶石海星&quot;},{&quot;id&quot;:122,&quot;name&quot;:&quot;魔牆人偶&quot;},{&quot;id&quot;:123,&quot;name&quot;:&quot;飛天螳螂&quot;},{&quot;id&quot;:124,&quot;name&quot;:&quot;迷唇姐&quot;},{&quot;id&quot;:125,&quot;name&quot;:&quot;電擊獸&quot;},{&quot;id&quot;:126,&quot;name&quot;:&quot;鴨嘴火獸&quot;},{&quot;id&quot;:127,&quot;name&quot;:&quot;凱羅斯&quot;},{&quot;id&quot;:128,&quot;name&quot;:&quot;肯泰羅&quot;},{&quot;id&quot;:129,&quot;name&quot;:&quot;鯉魚王&quot;},{&quot;id&quot;:130,&quot;name&quot;:&quot;暴鯉龍&quot;},{&quot;id&quot;:131,&quot;name&quot;:&quot;拉普拉斯&quot;},{&quot;id&quot;:132,&quot;name&quot;:&quot;百變怪&quot;},{&quot;id&quot;:133,&quot;name&quot;:&quot;伊布&quot;},{&quot;id&quot;:134,&quot;name&quot;:&quot;水伊布&quot;},{&quot;id&quot;:135,&quot;name&quot;:&quot;雷伊布&quot;},{&quot;id&quot;:136,&quot;name&quot;:&quot;火伊布&quot;},{&quot;id&quot;:137,&quot;name&quot;:&quot;多邊獸&quot;},{&quot;id&quot;:138,&quot;name&quot;:&quot;菊石獸&quot;},{&quot;id&quot;:139,&quot;name&quot;:&quot;多刺菊石獸&quot;},{&quot;id&quot;:140,&quot;name&quot;:&quot;化石盔&quot;},{&quot;id&quot;:141,&quot;name&quot;:&quot;鐮刀盔&quot;},{&quot;id&quot;:142,&quot;name&quot;:&quot;化石翼龍&quot;},{&quot;id&quot;:143,&quot;name&quot;:&quot;卡比獸&quot;},{&quot;id&quot;:144,&quot;name&quot;:&quot;急凍鳥&quot;},{&quot;id&quot;:145,&quot;name&quot;:&quot;閃電鳥&quot;},{&quot;id&quot;:146,&quot;name&quot;:&quot;火焰鳥&quot;},{&quot;id&quot;:147,&quot;name&quot;:&quot;迷你龍&quot;},{&quot;id&quot;:148,&quot;name&quot;:&quot;哈克龍&quot;},{&quot;id&quot;:149,&quot;name&quot;:&quot;快龍&quot;},{&quot;id&quot;:150,&quot;name&quot;:&quot;超夢&quot;},{&quot;id&quot;:151,&quot;name&quot;:&quot;夢幻&quot;},{&quot;id&quot;:152,&quot;name&quot;:&quot;菊草葉&quot;},{&quot;id&quot;:153,&quot;name&quot;:&quot;月桂葉&quot;},{&quot;id&quot;:154,&quot;name&quot;:&quot;大竺葵&quot;},{&quot;id&quot;:155,&quot;name&quot;:&quot;火球鼠&quot;},{&quot;id&quot;:156,&quot;name&quot;:&quot;火岩鼠&quot;},{&quot;id&quot;:157,&quot;name&quot;:&quot;火爆獸&quot;},{&quot;id&quot;:158,&quot;name&quot;:&quot;小鋸鱷&quot;},{&quot;id&quot;:159,&quot;name&quot;:&quot;藍鱷&quot;},{&quot;id&quot;:160,&quot;name&quot;:&quot;大力鱷&quot;},{&quot;id&quot;:161,&quot;name&quot;:&quot;尾立&quot;},{&quot;id&quot;:162,&quot;name&quot;:&quot;大尾立&quot;},{&quot;id&quot;:163,&quot;name&quot;:&quot;咕咕&quot;},{&quot;id&quot;:164,&quot;name&quot;:&quot;貓頭夜鷹&quot;},{&quot;id&quot;:165,&quot;name&quot;:&quot;芭瓢蟲&quot;},{&quot;id&quot;:166,&quot;name&quot;:&quot;安瓢蟲&quot;},{&quot;id&quot;:167,&quot;name&quot;:&quot;圓絲蛛&quot;},{&quot;id&quot;:168,&quot;name&quot;:&quot;阿利多斯&quot;},{&quot;id&quot;:169,&quot;name&quot;:&quot;叉字蝠&quot;},{&quot;id&quot;:170,&quot;name&quot;:&quot;燈籠魚&quot;},{&quot;id&quot;:171,&quot;name&quot;:&quot;電燈怪&quot;},{&quot;id&quot;:172,&quot;name&quot;:&quot;皮丘&quot;},{&quot;id&quot;:173,&quot;name&quot;:&quot;皮寶寶&quot;},{&quot;id&quot;:174,&quot;name&quot;:&quot;寶寶丁&quot;},{&quot;id&quot;:175,&quot;name&quot;:&quot;波克比&quot;},{&quot;id&quot;:176,&quot;name&quot;:&quot;波克基古&quot;},{&quot;id&quot;:177,&quot;name&quot;:&quot;天然雀&quot;},{&quot;id&quot;:178,&quot;name&quot;:&quot;天然鳥&quot;},{&quot;id&quot;:179,&quot;name&quot;:&quot;咩利羊&quot;},{&quot;id&quot;:180,&quot;name&quot;:&quot;茸茸羊&quot;},{&quot;id&quot;:181,&quot;name&quot;:&quot;電龍&quot;},{&quot;id&quot;:182,&quot;name&quot;:&quot;美麗花&quot;},{&quot;id&quot;:183,&quot;name&quot;:&quot;瑪力露&quot;},{&quot;id&quot;:184,&quot;name&quot;:&quot;瑪力露麗&quot;},{&quot;id&quot;:185,&quot;name&quot;:&quot;樹才怪&quot;},{&quot;id&quot;:186,&quot;name&quot;:&quot;蚊香蛙皇&quot;},{&quot;id&quot;:187,&quot;name&quot;:&quot;毽子草&quot;},{&quot;id&quot;:188,&quot;name&quot;:&quot;毽子花&quot;},{&quot;id&quot;:189,&quot;name&quot;:&quot;毽子棉&quot;},{&quot;id&quot;:190,&quot;name&quot;:&quot;長尾怪手&quot;},{&quot;id&quot;:191,&quot;name&quot;:&quot;向日種子&quot;},{&quot;id&quot;:192,&quot;name&quot;:&quot;向日花怪&quot;},{&quot;id&quot;:193,&quot;name&quot;:&quot;蜻蜻蜓&quot;},{&quot;id&quot;:194,&quot;name&quot;:&quot;烏波&quot;},{&quot;id&quot;:195,&quot;name&quot;:&quot;沼王&quot;},{&quot;id&quot;:196,&quot;name&quot;:&quot;太陽伊布&quot;},{&quot;id&quot;:197,&quot;name&quot;:&quot;月亮伊布&quot;},{&quot;id&quot;:198,&quot;name&quot;:&quot;黑暗鴉&quot;},{&quot;id&quot;:199,&quot;name&quot;:&quot;呆呆王&quot;},{&quot;id&quot;:200,&quot;name&quot;:&quot;夢妖&quot;},{&quot;id&quot;:201,&quot;name&quot;:&quot;未知圖騰&quot;},{&quot;id&quot;:202,&quot;name&quot;:&quot;果然翁&quot;},{&quot;id&quot;:203,&quot;name&quot;:&quot;麒麟奇&quot;},{&quot;id&quot;:204,&quot;name&quot;:&quot;榛果球&quot;},{&quot;id&quot;:205,&quot;name&quot;:&quot;佛烈托斯&quot;},{&quot;id&quot;:206,&quot;name&quot;:&quot;土龍弟弟&quot;},{&quot;id&quot;:207,&quot;name&quot;:&quot;天蠍&quot;},{&quot;id&quot;:208,&quot;name&quot;:&quot;大鋼蛇&quot;},{&quot;id&quot;:209,&quot;name&quot;:&quot;布魯&quot;},{&quot;id&quot;:210,&quot;name&quot;:&quot;布魯皇&quot;},{&quot;id&quot;:211,&quot;name&quot;:&quot;千針魚&quot;},{&quot;id&quot;:212,&quot;name&quot;:&quot;巨鉗螳螂&quot;},{&quot;id&quot;:213,&quot;name&quot;:&quot;壺壺&quot;},{&quot;id&quot;:214,&quot;name&quot;:&quot;赫拉克羅斯&quot;},{&quot;id&quot;:215,&quot;name&quot;:&quot;狃拉&quot;},{&quot;id&quot;:216,&quot;name&quot;:&quot;熊寶寶&quot;},{&quot;id&quot;:217,&quot;name&quot;:&quot;圈圈熊&quot;},{&quot;id&quot;:218,&quot;name&quot;:&quot;熔岩蟲&quot;},{&quot;id&quot;:219,&quot;name&quot;:&quot;熔岩蝸牛&quot;},{&quot;id&quot;:220,&quot;name&quot;:&quot;小山豬&quot;},{&quot;id&quot;:221,&quot;name&quot;:&quot;長毛豬&quot;},{&quot;id&quot;:222,&quot;name&quot;:&quot;太陽珊瑚&quot;},{&quot;id&quot;:223,&quot;name&quot;:&quot;鐵炮魚&quot;},{&quot;id&quot;:224,&quot;name&quot;:&quot;章魚桶&quot;},{&quot;id&quot;:225,&quot;name&quot;:&quot;信使鳥&quot;},{&quot;id&quot;:226,&quot;name&quot;:&quot;巨翅飛魚&quot;},{&quot;id&quot;:227,&quot;name&quot;:&quot;盔甲鳥&quot;},{&quot;id&quot;:228,&quot;name&quot;:&quot;戴魯比&quot;},{&quot;id&quot;:229,&quot;name&quot;:&quot;黑魯加&quot;},{&quot;id&quot;:230,&quot;name&quot;:&quot;刺龍王&quot;},{&quot;id&quot;:231,&quot;name&quot;:&quot;小小象&quot;},{&quot;id&quot;:232,&quot;name&quot;:&quot;頓甲&quot;},{&quot;id&quot;:233,&quot;name&quot;:&quot;多邊獸Ⅱ&quot;},{&quot;id&quot;:234,&quot;name&quot;:&quot;驚角鹿&quot;},{&quot;id&quot;:235,&quot;name&quot;:&quot;圖圖犬&quot;},{&quot;id&quot;:236,&quot;name&quot;:&quot;無畏小子&quot;},{&quot;id&quot;:237,&quot;name&quot;:&quot;戰舞郎&quot;},{&quot;id&quot;:238,&quot;name&quot;:&quot;迷唇娃&quot;},{&quot;id&quot;:239,&quot;name&quot;:&quot;電擊怪&quot;},{&quot;id&quot;:240,&quot;name&quot;:&quot;鴨嘴寶寶&quot;},{&quot;id&quot;:241,&quot;name&quot;:&quot;大奶罐&quot;},{&quot;id&quot;:242,&quot;name&quot;:&quot;幸福蛋&quot;},{&quot;id&quot;:243,&quot;name&quot;:&quot;雷公&quot;},{&quot;id&quot;:244,&quot;name&quot;:&quot;炎帝&quot;},{&quot;id&quot;:245,&quot;name&quot;:&quot;水君&quot;},{&quot;id&quot;:246,&quot;name&quot;:&quot;幼基拉斯&quot;},{&quot;id&quot;:247,&quot;name&quot;:&quot;沙基拉斯&quot;},{&quot;id&quot;:248,&quot;name&quot;:&quot;班基拉斯&quot;},{&quot;id&quot;:249,&quot;name&quot;:&quot;洛奇亞&quot;},{&quot;id&quot;:250,&quot;name&quot;:&quot;鳳王&quot;},{&quot;id&quot;:251,&quot;name&quot;:&quot;時拉比&quot;},{&quot;id&quot;:252,&quot;name&quot;:&quot;木守宮&quot;},{&quot;id&quot;:253,&quot;name&quot;:&quot;森林蜥蜴&quot;},{&quot;id&quot;:254,&quot;name&quot;:&quot;蜥蜴王&quot;},{&quot;id&quot;:255,&quot;name&quot;:&quot;火稚雞&quot;},{&quot;id&quot;:256,&quot;name&quot;:&quot;力壯雞&quot;},{&quot;id&quot;:257,&quot;name&quot;:&quot;火焰雞&quot;},{&quot;id&quot;:258,&quot;name&quot;:&quot;水躍魚&quot;},{&quot;id&quot;:259,&quot;name&quot;:&quot;沼躍魚&quot;},{&quot;id&quot;:260,&quot;name&quot;:&quot;巨沼怪&quot;},{&quot;id&quot;:261,&quot;name&quot;:&quot;土狼犬&quot;},{&quot;id&quot;:262,&quot;name&quot;:&quot;大狼犬&quot;},{&quot;id&quot;:263,&quot;name&quot;:&quot;蛇紋熊&quot;},{&quot;id&quot;:264,&quot;name&quot;:&quot;直衝熊&quot;},{&quot;id&quot;:265,&quot;name&quot;:&quot;刺尾蟲&quot;},{&quot;id&quot;:266,&quot;name&quot;:&quot;甲殼繭&quot;},{&quot;id&quot;:267,&quot;name&quot;:&quot;狩獵鳳蝶&quot;},{&quot;id&quot;:268,&quot;name&quot;:&quot;盾甲繭&quot;},{&quot;id&quot;:269,&quot;name&quot;:&quot;毒粉蛾&quot;},{&quot;id&quot;:270,&quot;name&quot;:&quot;蓮葉童子&quot;},{&quot;id&quot;:271,&quot;name&quot;:&quot;蓮帽小童&quot;},{&quot;id&quot;:272,&quot;name&quot;:&quot;樂天河童&quot;},{&quot;id&quot;:273,&quot;name&quot;:&quot;橡實果&quot;},{&quot;id&quot;:274,&quot;name&quot;:&quot;長鼻葉&quot;},{&quot;id&quot;:275,&quot;name&quot;:&quot;狡猾天狗&quot;},{&quot;id&quot;:276,&quot;name&quot;:&quot;傲骨燕&quot;},{&quot;id&quot;:277,&quot;name&quot;:&quot;大王燕&quot;},{&quot;id&quot;:278,&quot;name&quot;:&quot;長翅鷗&quot;},{&quot;id&quot;:279,&quot;name&quot;:&quot;大嘴鷗&quot;},{&quot;id&quot;:280,&quot;name&quot;:&quot;拉魯拉絲&quot;},{&quot;id&quot;:281,&quot;name&quot;:&quot;奇魯莉安&quot;},{&quot;id&quot;:282,&quot;name&quot;:&quot;沙奈朵&quot;},{&quot;id&quot;:283,&quot;name&quot;:&quot;溜溜糖球&quot;},{&quot;id&quot;:284,&quot;name&quot;:&quot;雨翅蛾&quot;},{&quot;id&quot;:285,&quot;name&quot;:&quot;蘑蘑菇&quot;},{&quot;id&quot;:286,&quot;name&quot;:&quot;斗笠菇&quot;},{&quot;id&quot;:287,&quot;name&quot;:&quot;懶人獺&quot;},{&quot;id&quot;:288,&quot;name&quot;:&quot;過動猿&quot;},{&quot;id&quot;:289,&quot;name&quot;:&quot;請假王&quot;},{&quot;id&quot;:290,&quot;name&quot;:&quot;土居忍士&quot;},{&quot;id&quot;:291,&quot;name&quot;:&quot;鐵面忍者&quot;},{&quot;id&quot;:292,&quot;name&quot;:&quot;脫殼忍者&quot;},{&quot;id&quot;:293,&quot;name&quot;:&quot;咕妞妞&quot;},{&quot;id&quot;:294,&quot;name&quot;:&quot;吼爆彈&quot;},{&quot;id&quot;:295,&quot;name&quot;:&quot;爆音怪&quot;},{&quot;id&quot;:296,&quot;name&quot;:&quot;幕下力士&quot;},{&quot;id&quot;:297,&quot;name&quot;:&quot;鐵掌力士&quot;},{&quot;id&quot;:298,&quot;name&quot;:&quot;露力麗&quot;},{&quot;id&quot;:299,&quot;name&quot;:&quot;朝北鼻&quot;},{&quot;id&quot;:300,&quot;name&quot;:&quot;向尾喵&quot;},{&quot;id&quot;:301,&quot;name&quot;:&quot;優雅貓&quot;},{&quot;id&quot;:302,&quot;name&quot;:&quot;勾魂眼&quot;},{&quot;id&quot;:303,&quot;name&quot;:&quot;大嘴娃&quot;},{&quot;id&quot;:304,&quot;name&quot;:&quot;可可多拉&quot;},{&quot;id&quot;:305,&quot;name&quot;:&quot;可多拉&quot;},{&quot;id&quot;:306,&quot;name&quot;:&quot;波士可多拉&quot;},{&quot;id&quot;:307,&quot;name&quot;:&quot;瑪沙那&quot;},{&quot;id&quot;:308,&quot;name&quot;:&quot;恰雷姆&quot;},{&quot;id&quot;:309,&quot;name&quot;:&quot;落雷獸&quot;},{&quot;id&quot;:310,&quot;name&quot;:&quot;雷電獸&quot;},{&quot;id&quot;:311,&quot;name&quot;:&quot;正電拍拍&quot;},{&quot;id&quot;:312,&quot;name&quot;:&quot;負電拍拍&quot;},{&quot;id&quot;:313,&quot;name&quot;:&quot;電螢蟲&quot;},{&quot;id&quot;:314,&quot;name&quot;:&quot;甜甜螢&quot;},{&quot;id&quot;:315,&quot;name&quot;:&quot;毒薔薇&quot;},{&quot;id&quot;:316,&quot;name&quot;:&quot;溶食獸&quot;},{&quot;id&quot;:317,&quot;name&quot;:&quot;吞食獸&quot;},{&quot;id&quot;:318,&quot;name&quot;:&quot;利牙魚&quot;},{&quot;id&quot;:319,&quot;name&quot;:&quot;巨牙鯊&quot;},{&quot;id&quot;:320,&quot;name&quot;:&quot;吼吼鯨&quot;},{&quot;id&quot;:321,&quot;name&quot;:&quot;吼鯨王&quot;},{&quot;id&quot;:322,&quot;name&quot;:&quot;呆火駝&quot;},{&quot;id&quot;:323,&quot;name&quot;:&quot;噴火駝&quot;},{&quot;id&quot;:324,&quot;name&quot;:&quot;煤炭龜&quot;},{&quot;id&quot;:325,&quot;name&quot;:&quot;跳跳豬&quot;},{&quot;id&quot;:326,&quot;name&quot;:&quot;噗噗豬&quot;},{&quot;id&quot;:327,&quot;name&quot;:&quot;晃晃斑&quot;},{&quot;id&quot;:328,&quot;name&quot;:&quot;大顎蟻&quot;},{&quot;id&quot;:329,&quot;name&quot;:&quot;超音波幼蟲&quot;},{&quot;id&quot;:330,&quot;name&quot;:&quot;沙漠蜻蜓&quot;},{&quot;id&quot;:331,&quot;name&quot;:&quot;刺球仙人掌&quot;},{&quot;id&quot;:332,&quot;name&quot;:&quot;夢歌仙人掌&quot;},{&quot;id&quot;:333,&quot;name&quot;:&quot;青綿鳥&quot;},{&quot;id&quot;:334,&quot;name&quot;:&quot;七夕青鳥&quot;},{&quot;id&quot;:335,&quot;name&quot;:&quot;貓鼬斬&quot;},{&quot;id&quot;:336,&quot;name&quot;:&quot;飯匙蛇&quot;},{&quot;id&quot;:337,&quot;name&quot;:&quot;月石&quot;},{&quot;id&quot;:338,&quot;name&quot;:&quot;太陽岩&quot;},{&quot;id&quot;:339,&quot;name&quot;:&quot;泥泥鰍&quot;},{&quot;id&quot;:340,&quot;name&quot;:&quot;鯰魚王&quot;},{&quot;id&quot;:341,&quot;name&quot;:&quot;龍蝦小兵&quot;},{&quot;id&quot;:342,&quot;name&quot;:&quot;鐵螯龍蝦&quot;},{&quot;id&quot;:343,&quot;name&quot;:&quot;天秤偶&quot;},{&quot;id&quot;:344,&quot;name&quot;:&quot;念力土偶&quot;},{&quot;id&quot;:345,&quot;name&quot;:&quot;觸手百合&quot;},{&quot;id&quot;:346,&quot;name&quot;:&quot;搖籃百合&quot;},{&quot;id&quot;:347,&quot;name&quot;:&quot;太古羽蟲&quot;},{&quot;id&quot;:348,&quot;name&quot;:&quot;太古盔甲&quot;},{&quot;id&quot;:349,&quot;name&quot;:&quot;醜醜魚&quot;},{&quot;id&quot;:350,&quot;name&quot;:&quot;美納斯&quot;},{&quot;id&quot;:351,&quot;name&quot;:&quot;飄浮泡泡&quot;},{&quot;id&quot;:352,&quot;name&quot;:&quot;變隱龍&quot;},{&quot;id&quot;:353,&quot;name&quot;:&quot;怨影娃娃&quot;},{&quot;id&quot;:354,&quot;name&quot;:&quot;詛咒娃娃&quot;},{&quot;id&quot;:355,&quot;name&quot;:&quot;夜巡靈&quot;},{&quot;id&quot;:356,&quot;name&quot;:&quot;彷徨夜靈&quot;},{&quot;id&quot;:357,&quot;name&quot;:&quot;熱帶龍&quot;},{&quot;id&quot;:358,&quot;name&quot;:&quot;風鈴鈴&quot;},{&quot;id&quot;:359,&quot;name&quot;:&quot;阿勃梭魯&quot;},{&quot;id&quot;:360,&quot;name&quot;:&quot;小果然&quot;},{&quot;id&quot;:361,&quot;name&quot;:&quot;雪童子&quot;},{&quot;id&quot;:362,&quot;name&quot;:&quot;冰鬼護&quot;},{&quot;id&quot;:363,&quot;name&quot;:&quot;海豹球&quot;},{&quot;id&quot;:364,&quot;name&quot;:&quot;海魔獅&quot;},{&quot;id&quot;:365,&quot;name&quot;:&quot;帝牙海獅&quot;},{&quot;id&quot;:366,&quot;name&quot;:&quot;珍珠貝&quot;},{&quot;id&quot;:367,&quot;name&quot;:&quot;獵斑魚&quot;},{&quot;id&quot;:368,&quot;name&quot;:&quot;櫻花魚&quot;},{&quot;id&quot;:369,&quot;name&quot;:&quot;古空棘魚&quot;},{&quot;id&quot;:370,&quot;name&quot;:&quot;愛心魚&quot;},{&quot;id&quot;:371,&quot;name&quot;:&quot;寶貝龍&quot;},{&quot;id&quot;:372,&quot;name&quot;:&quot;甲殼龍&quot;},{&quot;id&quot;:373,&quot;name&quot;:&quot;暴飛龍&quot;},{&quot;id&quot;:374,&quot;name&quot;:&quot;鐵啞鈴&quot;},{&quot;id&quot;:375,&quot;name&quot;:&quot;金屬怪&quot;},{&quot;id&quot;:376,&quot;name&quot;:&quot;巨金怪&quot;},{&quot;id&quot;:377,&quot;name&quot;:&quot;雷吉洛克&quot;},{&quot;id&quot;:378,&quot;name&quot;:&quot;雷吉艾斯&quot;},{&quot;id&quot;:379,&quot;name&quot;:&quot;雷吉斯奇魯&quot;},{&quot;id&quot;:380,&quot;name&quot;:&quot;拉帝亞斯&quot;},{&quot;id&quot;:381,&quot;name&quot;:&quot;拉帝歐斯&quot;},{&quot;id&quot;:382,&quot;name&quot;:&quot;蓋歐卡&quot;},{&quot;id&quot;:383,&quot;name&quot;:&quot;固拉多&quot;},{&quot;id&quot;:384,&quot;name&quot;:&quot;烈空坐&quot;},{&quot;id&quot;:385,&quot;name&quot;:&quot;基拉祈&quot;},{&quot;id&quot;:386,&quot;name&quot;:&quot;代歐奇希斯&quot;},{&quot;id&quot;:387,&quot;name&quot;:&quot;草苗龜&quot;},{&quot;id&quot;:388,&quot;name&quot;:&quot;樹林龜&quot;},{&quot;id&quot;:389,&quot;name&quot;:&quot;土台龜&quot;},{&quot;id&quot;:390,&quot;name&quot;:&quot;小火焰猴&quot;},{&quot;id&quot;:391,&quot;name&quot;:&quot;猛火猴&quot;},{&quot;id&quot;:392,&quot;name&quot;:&quot;烈焰猴&quot;},{&quot;id&quot;:393,&quot;name&quot;:&quot;波加曼&quot;},{&quot;id&quot;:394,&quot;name&quot;:&quot;波皇子&quot;},{&quot;id&quot;:395,&quot;name&quot;:&quot;帝王拿波&quot;},{&quot;id&quot;:396,&quot;name&quot;:&quot;姆克兒&quot;},{&quot;id&quot;:397,&quot;name&quot;:&quot;姆克鳥&quot;},{&quot;id&quot;:398,&quot;name&quot;:&quot;姆克鷹&quot;},{&quot;id&quot;:399,&quot;name&quot;:&quot;大牙狸&quot;},{&quot;id&quot;:400,&quot;name&quot;:&quot;大尾狸&quot;},{&quot;id&quot;:401,&quot;name&quot;:&quot;圓法師&quot;},{&quot;id&quot;:402,&quot;name&quot;:&quot;音箱蟀&quot;},{&quot;id&quot;:403,&quot;name&quot;:&quot;小貓怪&quot;},{&quot;id&quot;:404,&quot;name&quot;:&quot;勒克貓&quot;},{&quot;id&quot;:405,&quot;name&quot;:&quot;倫琴貓&quot;},{&quot;id&quot;:406,&quot;name&quot;:&quot;含羞苞&quot;},{&quot;id&quot;:407,&quot;name&quot;:&quot;羅絲雷朵&quot;},{&quot;id&quot;:408,&quot;name&quot;:&quot;頭蓋龍&quot;},{&quot;id&quot;:409,&quot;name&quot;:&quot;戰槌龍&quot;},{&quot;id&quot;:410,&quot;name&quot;:&quot;盾甲龍&quot;},{&quot;id&quot;:411,&quot;name&quot;:&quot;護城龍&quot;},{&quot;id&quot;:412,&quot;name&quot;:&quot;結草兒&quot;},{&quot;id&quot;:413,&quot;name&quot;:&quot;結草貴婦&quot;},{&quot;id&quot;:414,&quot;name&quot;:&quot;紳士蛾&quot;},{&quot;id&quot;:415,&quot;name&quot;:&quot;三蜜蜂&quot;},{&quot;id&quot;:416,&quot;name&quot;:&quot;蜂女王&quot;},{&quot;id&quot;:417,&quot;name&quot;:&quot;帕奇利茲&quot;},{&quot;id&quot;:418,&quot;name&quot;:&quot;泳圈鼬&quot;},{&quot;id&quot;:419,&quot;name&quot;:&quot;浮潛鼬&quot;},{&quot;id&quot;:420,&quot;name&quot;:&quot;櫻花寶&quot;},{&quot;id&quot;:421,&quot;name&quot;:&quot;櫻花兒&quot;},{&quot;id&quot;:422,&quot;name&quot;:&quot;無殼海兔&quot;},{&quot;id&quot;:423,&quot;name&quot;:&quot;海兔獸&quot;},{&quot;id&quot;:424,&quot;name&quot;:&quot;雙尾怪手&quot;},{&quot;id&quot;:425,&quot;name&quot;:&quot;飄飄球&quot;},{&quot;id&quot;:426,&quot;name&quot;:&quot;隨風球&quot;},{&quot;id&quot;:427,&quot;name&quot;:&quot;捲捲耳&quot;},{&quot;id&quot;:428,&quot;name&quot;:&quot;長耳兔&quot;},{&quot;id&quot;:429,&quot;name&quot;:&quot;夢妖魔&quot;},{&quot;id&quot;:430,&quot;name&quot;:&quot;烏鴉頭頭&quot;},{&quot;id&quot;:431,&quot;name&quot;:&quot;魅力喵&quot;},{&quot;id&quot;:432,&quot;name&quot;:&quot;東施喵&quot;},{&quot;id&quot;:433,&quot;name&quot;:&quot;鈴鐺響&quot;},{&quot;id&quot;:434,&quot;name&quot;:&quot;臭鼬噗&quot;},{&quot;id&quot;:435,&quot;name&quot;:&quot;坦克臭鼬&quot;},{&quot;id&quot;:436,&quot;name&quot;:&quot;銅鏡怪&quot;},{&quot;id&quot;:437,&quot;name&quot;:&quot;青銅鐘&quot;},{&quot;id&quot;:438,&quot;name&quot;:&quot;盆才怪&quot;},{&quot;id&quot;:439,&quot;name&quot;:&quot;魔尼尼&quot;},{&quot;id&quot;:440,&quot;name&quot;:&quot;小福蛋&quot;},{&quot;id&quot;:441,&quot;name&quot;:&quot;聒噪鳥&quot;},{&quot;id&quot;:442,&quot;name&quot;:&quot;花岩怪&quot;},{&quot;id&quot;:443,&quot;name&quot;:&quot;圓陸鯊&quot;},{&quot;id&quot;:444,&quot;name&quot;:&quot;尖牙陸鯊&quot;},{&quot;id&quot;:445,&quot;name&quot;:&quot;烈咬陸鯊&quot;},{&quot;id&quot;:446,&quot;name&quot;:&quot;小卡比獸&quot;},{&quot;id&quot;:447,&quot;name&quot;:&quot;利歐路&quot;},{&quot;id&quot;:448,&quot;name&quot;:&quot;路卡利歐&quot;},{&quot;id&quot;:449,&quot;name&quot;:&quot;沙河馬&quot;},{&quot;id&quot;:450,&quot;name&quot;:&quot;河馬獸&quot;},{&quot;id&quot;:451,&quot;name&quot;:&quot;鉗尾蠍&quot;},{&quot;id&quot;:452,&quot;name&quot;:&quot;龍王蠍&quot;},{&quot;id&quot;:453,&quot;name&quot;:&quot;不良蛙&quot;},{&quot;id&quot;:454,&quot;name&quot;:&quot;毒骷蛙&quot;},{&quot;id&quot;:455,&quot;name&quot;:&quot;尖牙籠&quot;},{&quot;id&quot;:456,&quot;name&quot;:&quot;螢光魚&quot;},{&quot;id&quot;:457,&quot;name&quot;:&quot;霓虹魚&quot;},{&quot;id&quot;:458,&quot;name&quot;:&quot;小球飛魚&quot;},{&quot;id&quot;:459,&quot;name&quot;:&quot;雪笠怪&quot;},{&quot;id&quot;:460,&quot;name&quot;:&quot;暴雪王&quot;},{&quot;id&quot;:461,&quot;name&quot;:&quot;瑪狃拉&quot;},{&quot;id&quot;:462,&quot;name&quot;:&quot;自爆磁怪&quot;},{&quot;id&quot;:463,&quot;name&quot;:&quot;大舌舔&quot;},{&quot;id&quot;:464,&quot;name&quot;:&quot;超甲狂犀&quot;},{&quot;id&quot;:465,&quot;name&quot;:&quot;巨蔓藤&quot;},{&quot;id&quot;:466,&quot;name&quot;:&quot;電擊魔獸&quot;},{&quot;id&quot;:467,&quot;name&quot;:&quot;鴨嘴炎獸&quot;},{&quot;id&quot;:468,&quot;name&quot;:&quot;波克基斯&quot;},{&quot;id&quot;:469,&quot;name&quot;:&quot;遠古巨蜓&quot;},{&quot;id&quot;:470,&quot;name&quot;:&quot;葉伊布&quot;},{&quot;id&quot;:471,&quot;name&quot;:&quot;冰伊布&quot;},{&quot;id&quot;:472,&quot;name&quot;:&quot;天蠍王&quot;},{&quot;id&quot;:473,&quot;name&quot;:&quot;象牙豬&quot;},{&quot;id&quot;:474,&quot;name&quot;:&quot;多邊獸Ｚ&quot;},{&quot;id&quot;:475,&quot;name&quot;:&quot;艾路雷朵&quot;},{&quot;id&quot;:476,&quot;name&quot;:&quot;大朝北鼻&quot;},{&quot;id&quot;:477,&quot;name&quot;:&quot;黑夜魔靈&quot;},{&quot;id&quot;:478,&quot;name&quot;:&quot;雪妖女&quot;},{&quot;id&quot;:479,&quot;name&quot;:&quot;洛托姆&quot;},{&quot;id&quot;:480,&quot;name&quot;:&quot;由克希&quot;},{&quot;id&quot;:481,&quot;name&quot;:&quot;艾姆利多&quot;},{&quot;id&quot;:482,&quot;name&quot;:&quot;亞克諾姆&quot;},{&quot;id&quot;:483,&quot;name&quot;:&quot;帝牙盧卡&quot;},{&quot;id&quot;:484,&quot;name&quot;:&quot;帕路奇亞&quot;},{&quot;id&quot;:485,&quot;name&quot;:&quot;席多藍恩&quot;},{&quot;id&quot;:486,&quot;name&quot;:&quot;雷吉奇卡斯&quot;},{&quot;id&quot;:487,&quot;name&quot;:&quot;騎拉帝納&quot;},{&quot;id&quot;:488,&quot;name&quot;:&quot;克雷色利亞&quot;},{&quot;id&quot;:489,&quot;name&quot;:&quot;霏歐納&quot;},{&quot;id&quot;:490,&quot;name&quot;:&quot;瑪納霏&quot;},{&quot;id&quot;:491,&quot;name&quot;:&quot;達克萊伊&quot;},{&quot;id&quot;:492,&quot;name&quot;:&quot;謝米&quot;},{&quot;id&quot;:493,&quot;name&quot;:&quot;阿爾宙斯&quot;},{&quot;id&quot;:494,&quot;name&quot;:&quot;比克提尼&quot;},{&quot;id&quot;:495,&quot;name&quot;:&quot;藤藤蛇&quot;},{&quot;id&quot;:496,&quot;name&quot;:&quot;青藤蛇&quot;},{&quot;id&quot;:497,&quot;name&quot;:&quot;君主蛇&quot;},{&quot;id&quot;:498,&quot;name&quot;:&quot;暖暖豬&quot;},{&quot;id&quot;:499,&quot;name&quot;:&quot;炒炒豬&quot;},{&quot;id&quot;:500,&quot;name&quot;:&quot;炎武王&quot;},{&quot;id&quot;:501,&quot;name&quot;:&quot;水水獺&quot;},{&quot;id&quot;:502,&quot;name&quot;:&quot;雙刃丸&quot;},{&quot;id&quot;:503,&quot;name&quot;:&quot;大劍鬼&quot;},{&quot;id&quot;:504,&quot;name&quot;:&quot;探探鼠&quot;},{&quot;id&quot;:505,&quot;name&quot;:&quot;步哨鼠&quot;},{&quot;id&quot;:506,&quot;name&quot;:&quot;小約克&quot;},{&quot;id&quot;:507,&quot;name&quot;:&quot;哈約克&quot;},{&quot;id&quot;:508,&quot;name&quot;:&quot;長毛狗&quot;},{&quot;id&quot;:509,&quot;name&quot;:&quot;扒手貓&quot;},{&quot;id&quot;:510,&quot;name&quot;:&quot;酷豹&quot;},{&quot;id&quot;:511,&quot;name&quot;:&quot;花椰猴&quot;},{&quot;id&quot;:512,&quot;name&quot;:&quot;花椰猿&quot;},{&quot;id&quot;:513,&quot;name&quot;:&quot;爆香猴&quot;},{&quot;id&quot;:515,&quot;name&quot;:&quot;冷水猴&quot;},{&quot;id&quot;:517,&quot;name&quot;:&quot;食夢夢&quot;},{&quot;id&quot;:518,&quot;name&quot;:&quot;夢夢蝕&quot;},{&quot;id&quot;:519,&quot;name&quot;:&quot;豆豆鴿&quot;},{&quot;id&quot;:521,&quot;name&quot;:&quot;高傲雉雞&quot;},{&quot;id&quot;:524,&quot;name&quot;:&quot;石丸子&quot;},{&quot;id&quot;:525,&quot;name&quot;:&quot;地幔岩&quot;},{&quot;id&quot;:526,&quot;name&quot;:&quot;龐岩怪&quot;},{&quot;id&quot;:527,&quot;name&quot;:&quot;滾滾蝙蝠&quot;},{&quot;id&quot;:528,&quot;name&quot;:&quot;心蝙蝠&quot;},{&quot;id&quot;:529,&quot;name&quot;:&quot;螺釘地鼠&quot;},{&quot;id&quot;:530,&quot;name&quot;:&quot;龍頭地鼠&quot;},{&quot;id&quot;:531,&quot;name&quot;:&quot;差不多娃娃&quot;},{&quot;id&quot;:532,&quot;name&quot;:&quot;搬運小匠&quot;},{&quot;id&quot;:533,&quot;name&quot;:&quot;鐵骨土人&quot;},{&quot;id&quot;:534,&quot;name&quot;:&quot;修建老匠&quot;},{&quot;id&quot;:535,&quot;name&quot;:&quot;圓蝌蚪&quot;},{&quot;id&quot;:536,&quot;name&quot;:&quot;藍蟾蜍&quot;},{&quot;id&quot;:537,&quot;name&quot;:&quot;蟾蜍王&quot;},{&quot;id&quot;:539,&quot;name&quot;:&quot;打擊鬼&quot;},{&quot;id&quot;:540,&quot;name&quot;:&quot;蟲寶包&quot;},{&quot;id&quot;:541,&quot;name&quot;:&quot;寶包繭&quot;},{&quot;id&quot;:542,&quot;name&quot;:&quot;保母蟲&quot;},{&quot;id&quot;:543,&quot;name&quot;:&quot;百足蜈蚣&quot;},{&quot;id&quot;:544,&quot;name&quot;:&quot;車輪毬&quot;},{&quot;id&quot;:545,&quot;name&quot;:&quot;蜈蚣王&quot;},{&quot;id&quot;:546,&quot;name&quot;:&quot;木棉球&quot;},{&quot;id&quot;:547,&quot;name&quot;:&quot;風妖精&quot;},{&quot;id&quot;:548,&quot;name&quot;:&quot;百合根娃娃&quot;},{&quot;id&quot;:549,&quot;name&quot;:&quot;裙兒小姐&quot;},{&quot;id&quot;:550,&quot;name&quot;:&quot;野蠻鱸魚&quot;},{&quot;id&quot;:551,&quot;name&quot;:&quot;黑眼鱷&quot;},{&quot;id&quot;:552,&quot;name&quot;:&quot;混混鱷&quot;},{&quot;id&quot;:553,&quot;name&quot;:&quot;流氓鱷&quot;},{&quot;id&quot;:554,&quot;name&quot;:&quot;火紅不倒翁&quot;},{&quot;id&quot;:555,&quot;name&quot;:&quot;達摩狒狒&quot;},{&quot;id&quot;:556,&quot;name&quot;:&quot;沙鈴仙人掌&quot;},{&quot;id&quot;:557,&quot;name&quot;:&quot;石居蟹&quot;},{&quot;id&quot;:559,&quot;name&quot;:&quot;滑滑小子&quot;},{&quot;id&quot;:560,&quot;name&quot;:&quot;頭巾混混&quot;},{&quot;id&quot;:561,&quot;name&quot;:&quot;象徵鳥&quot;},{&quot;id&quot;:562,&quot;name&quot;:&quot;哭哭面具&quot;},{&quot;id&quot;:563,&quot;name&quot;:&quot;死神棺&quot;},{&quot;id&quot;:566,&quot;name&quot;:&quot;始祖小鳥&quot;},{&quot;id&quot;:567,&quot;name&quot;:&quot;始祖大鳥&quot;},{&quot;id&quot;:568,&quot;name&quot;:&quot;破破袋&quot;},{&quot;id&quot;:569,&quot;name&quot;:&quot;灰塵山&quot;},{&quot;id&quot;:570,&quot;name&quot;:&quot;索羅亞&quot;},{&quot;id&quot;:571,&quot;name&quot;:&quot;索羅亞克&quot;},{&quot;id&quot;:572,&quot;name&quot;:&quot;泡沫栗鼠&quot;},{&quot;id&quot;:573,&quot;name&quot;:&quot;奇諾栗鼠&quot;},{&quot;id&quot;:574,&quot;name&quot;:&quot;哥德寶寶&quot;},{&quot;id&quot;:575,&quot;name&quot;:&quot;哥德小童&quot;},{&quot;id&quot;:576,&quot;name&quot;:&quot;哥德小姐&quot;},{&quot;id&quot;:577,&quot;name&quot;:&quot;單卵細胞球&quot;},{&quot;id&quot;:578,&quot;name&quot;:&quot;雙卵細胞球&quot;},{&quot;id&quot;:579,&quot;name&quot;:&quot;人造細胞卵&quot;},{&quot;id&quot;:580,&quot;name&quot;:&quot;鴨寶寶&quot;},{&quot;id&quot;:581,&quot;name&quot;:&quot;舞天鵝&quot;},{&quot;id&quot;:582,&quot;name&quot;:&quot;迷你冰&quot;},{&quot;id&quot;:583,&quot;name&quot;:&quot;多多冰&quot;},{&quot;id&quot;:584,&quot;name&quot;:&quot;雙倍多多冰&quot;},{&quot;id&quot;:585,&quot;name&quot;:&quot;四季鹿&quot;},{&quot;id&quot;:586,&quot;name&quot;:&quot;萌芽鹿&quot;},{&quot;id&quot;:587,&quot;name&quot;:&quot;電飛鼠&quot;},{&quot;id&quot;:588,&quot;name&quot;:&quot;蓋蓋蟲&quot;},{&quot;id&quot;:589,&quot;name&quot;:&quot;騎士蝸牛&quot;},{&quot;id&quot;:590,&quot;name&quot;:&quot;哎呀球菇&quot;},{&quot;id&quot;:594,&quot;name&quot;:&quot;保母曼波&quot;},{&quot;id&quot;:595,&quot;name&quot;:&quot;電電蟲&quot;},{&quot;id&quot;:596,&quot;name&quot;:&quot;電蜘蛛&quot;},{&quot;id&quot;:597,&quot;name&quot;:&quot;種子鐵球&quot;},{&quot;id&quot;:598,&quot;name&quot;:&quot;堅果啞鈴&quot;},{&quot;id&quot;:599,&quot;name&quot;:&quot;齒輪兒&quot;},{&quot;id&quot;:600,&quot;name&quot;:&quot;齒輪組&quot;},{&quot;id&quot;:601,&quot;name&quot;:&quot;齒輪怪&quot;},{&quot;id&quot;:602,&quot;name&quot;:&quot;麻麻小魚&quot;},{&quot;id&quot;:603,&quot;name&quot;:&quot;麻麻鰻&quot;},{&quot;id&quot;:604,&quot;name&quot;:&quot;麻麻鰻魚王&quot;},{&quot;id&quot;:605,&quot;name&quot;:&quot;小灰怪&quot;},{&quot;id&quot;:606,&quot;name&quot;:&quot;大宇怪&quot;},{&quot;id&quot;:607,&quot;name&quot;:&quot;燭光靈&quot;},{&quot;id&quot;:608,&quot;name&quot;:&quot;燈火幽靈&quot;},{&quot;id&quot;:609,&quot;name&quot;:&quot;水晶燈火靈&quot;},{&quot;id&quot;:610,&quot;name&quot;:&quot;牙牙&quot;},{&quot;id&quot;:611,&quot;name&quot;:&quot;斧牙龍&quot;},{&quot;id&quot;:612,&quot;name&quot;:&quot;雙斧戰龍&quot;},{&quot;id&quot;:613,&quot;name&quot;:&quot;噴嚏熊&quot;},{&quot;id&quot;:614,&quot;name&quot;:&quot;凍原熊&quot;},{&quot;id&quot;:615,&quot;name&quot;:&quot;幾何雪花&quot;},{&quot;id&quot;:617,&quot;name&quot;:&quot;敏捷蟲&quot;},{&quot;id&quot;:619,&quot;name&quot;:&quot;功夫鼬&quot;},{&quot;id&quot;:620,&quot;name&quot;:&quot;師父鼬&quot;},{&quot;id&quot;:621,&quot;name&quot;:&quot;赤面龍&quot;},{&quot;id&quot;:622,&quot;name&quot;:&quot;泥偶小人&quot;},{&quot;id&quot;:623,&quot;name&quot;:&quot;泥偶巨人&quot;},{&quot;id&quot;:624,&quot;name&quot;:&quot;駒刀小兵&quot;},{&quot;id&quot;:625,&quot;name&quot;:&quot;劈斬司令&quot;},{&quot;id&quot;:627,&quot;name&quot;:&quot;毛頭小鷹&quot;},{&quot;id&quot;:628,&quot;name&quot;:&quot;勇士雄鷹&quot;},{&quot;id&quot;:629,&quot;name&quot;:&quot;禿鷹丫頭&quot;},{&quot;id&quot;:630,&quot;name&quot;:&quot;禿鷹娜&quot;},{&quot;id&quot;:631,&quot;name&quot;:&quot;熔蟻獸&quot;},{&quot;id&quot;:632,&quot;name&quot;:&quot;鐵蟻&quot;},{&quot;id&quot;:633,&quot;name&quot;:&quot;單首龍&quot;},{&quot;id&quot;:634,&quot;name&quot;:&quot;雙首暴龍&quot;},{&quot;id&quot;:635,&quot;name&quot;:&quot;三首惡龍&quot;},{&quot;id&quot;:636,&quot;name&quot;:&quot;燃燒蟲&quot;},{&quot;id&quot;:637,&quot;name&quot;:&quot;火神蛾&quot;},{&quot;id&quot;:638,&quot;name&quot;:&quot;勾帕路翁&quot;},{&quot;id&quot;:639,&quot;name&quot;:&quot;代拉基翁&quot;},{&quot;id&quot;:640,&quot;name&quot;:&quot;畢力吉翁&quot;},{&quot;id&quot;:641,&quot;name&quot;:&quot;龍捲雲&quot;},{&quot;id&quot;:642,&quot;name&quot;:&quot;雷電雲&quot;},{&quot;id&quot;:643,&quot;name&quot;:&quot;萊希拉姆&quot;},{&quot;id&quot;:644,&quot;name&quot;:&quot;捷克羅姆&quot;},{&quot;id&quot;:645,&quot;name&quot;:&quot;土地雲&quot;},{&quot;id&quot;:646,&quot;name&quot;:&quot;酋雷姆&quot;},{&quot;id&quot;:647,&quot;name&quot;:&quot;凱路迪歐&quot;},{&quot;id&quot;:648,&quot;name&quot;:&quot;美洛耶塔&quot;},{&quot;id&quot;:649,&quot;name&quot;:&quot;蓋諾賽克特&quot;},{&quot;id&quot;:650,&quot;name&quot;:&quot;哈力栗&quot;},{&quot;id&quot;:651,&quot;name&quot;:&quot;胖胖哈力&quot;},{&quot;id&quot;:652,&quot;name&quot;:&quot;布里卡隆&quot;},{&quot;id&quot;:653,&quot;name&quot;:&quot;火狐狸&quot;},{&quot;id&quot;:654,&quot;name&quot;:&quot;長尾火狐&quot;},{&quot;id&quot;:655,&quot;name&quot;:&quot;妖火紅狐&quot;},{&quot;id&quot;:656,&quot;name&quot;:&quot;呱呱泡蛙&quot;},{&quot;id&quot;:657,&quot;name&quot;:&quot;呱頭蛙&quot;},{&quot;id&quot;:658,&quot;name&quot;:&quot;甲賀忍蛙&quot;},{&quot;id&quot;:659,&quot;name&quot;:&quot;掘掘兔&quot;},{&quot;id&quot;:660,&quot;name&quot;:&quot;掘地兔&quot;},{&quot;id&quot;:661,&quot;name&quot;:&quot;小箭雀&quot;},{&quot;id&quot;:662,&quot;name&quot;:&quot;火箭雀&quot;},{&quot;id&quot;:663,&quot;name&quot;:&quot;烈箭鷹&quot;},{&quot;id&quot;:664,&quot;name&quot;:&quot;粉蝶蟲&quot;},{&quot;id&quot;:665,&quot;name&quot;:&quot;粉蝶蛹&quot;},{&quot;id&quot;:666,&quot;name&quot;:&quot;彩粉蝶&quot;},{&quot;id&quot;:667,&quot;name&quot;:&quot;小獅獅&quot;},{&quot;id&quot;:669,&quot;name&quot;:&quot;花蓓蓓&quot;},{&quot;id&quot;:670,&quot;name&quot;:&quot;花葉蒂&quot;},{&quot;id&quot;:671,&quot;name&quot;:&quot;花潔夫人&quot;},{&quot;id&quot;:672,&quot;name&quot;:&quot;坐騎小羊&quot;},{&quot;id&quot;:673,&quot;name&quot;:&quot;坐騎山羊&quot;},{&quot;id&quot;:674,&quot;name&quot;:&quot;頑皮熊貓&quot;},{&quot;id&quot;:675,&quot;name&quot;:&quot;流氓熊貓&quot;},{&quot;id&quot;:676,&quot;name&quot;:&quot;多麗米亞&quot;},{&quot;id&quot;:677,&quot;name&quot;:&quot;妙喵&quot;},{&quot;id&quot;:678,&quot;name&quot;:&quot;超能妙喵&quot;},{&quot;id&quot;:679,&quot;name&quot;:&quot;獨劍鞘&quot;},{&quot;id&quot;:680,&quot;name&quot;:&quot;雙劍鞘&quot;},{&quot;id&quot;:681,&quot;name&quot;:&quot;堅盾劍怪&quot;},{&quot;id&quot;:682,&quot;name&quot;:&quot;粉香香&quot;},{&quot;id&quot;:684,&quot;name&quot;:&quot;綿綿泡芙&quot;},{&quot;id&quot;:685,&quot;name&quot;:&quot;胖甜妮&quot;},{&quot;id&quot;:686,&quot;name&quot;:&quot;好啦魷&quot;},{&quot;id&quot;:687,&quot;name&quot;:&quot;烏賊王&quot;},{&quot;id&quot;:688,&quot;name&quot;:&quot;龜腳腳&quot;},{&quot;id&quot;:689,&quot;name&quot;:&quot;龜足巨鎧&quot;},{&quot;id&quot;:690,&quot;name&quot;:&quot;垃垃藻&quot;},{&quot;id&quot;:691,&quot;name&quot;:&quot;毒藻龍&quot;},{&quot;id&quot;:692,&quot;name&quot;:&quot;鐵臂槍蝦&quot;},{&quot;id&quot;:693,&quot;name&quot;:&quot;鋼炮臂蝦&quot;},{&quot;id&quot;:694,&quot;name&quot;:&quot;傘電蜥&quot;},{&quot;id&quot;:695,&quot;name&quot;:&quot;光電傘蜥&quot;},{&quot;id&quot;:696,&quot;name&quot;:&quot;寶寶暴龍&quot;},{&quot;id&quot;:697,&quot;name&quot;:&quot;怪顎龍&quot;},{&quot;id&quot;:698,&quot;name&quot;:&quot;冰雪龍&quot;},{&quot;id&quot;:699,&quot;name&quot;:&quot;冰雪巨龍&quot;},{&quot;id&quot;:700,&quot;name&quot;:&quot;仙子伊布&quot;},{&quot;id&quot;:701,&quot;name&quot;:&quot;摔角鷹人&quot;},{&quot;id&quot;:702,&quot;name&quot;:&quot;咚咚鼠&quot;},{&quot;id&quot;:703,&quot;name&quot;:&quot;小碎鑽&quot;},{&quot;id&quot;:704,&quot;name&quot;:&quot;黏黏寶&quot;},{&quot;id&quot;:705,&quot;name&quot;:&quot;黏美兒&quot;},{&quot;id&quot;:706,&quot;name&quot;:&quot;黏美龍&quot;},{&quot;id&quot;:707,&quot;name&quot;:&quot;鑰圈兒&quot;},{&quot;id&quot;:708,&quot;name&quot;:&quot;小木靈&quot;},{&quot;id&quot;:709,&quot;name&quot;:&quot;朽木妖&quot;},{&quot;id&quot;:710,&quot;name&quot;:&quot;南瓜精&quot;},{&quot;id&quot;:711,&quot;name&quot;:&quot;南瓜怪人&quot;},{&quot;id&quot;:712,&quot;name&quot;:&quot;冰寶&quot;},{&quot;id&quot;:713,&quot;name&quot;:&quot;冰岩怪&quot;},{&quot;id&quot;:714,&quot;name&quot;:&quot;嗡蝠&quot;},{&quot;id&quot;:715,&quot;name&quot;:&quot;音波龍&quot;},{&quot;id&quot;:716,&quot;name&quot;:&quot;哲爾尼亞斯&quot;},{&quot;id&quot;:717,&quot;name&quot;:&quot;伊裴爾塔爾&quot;},{&quot;id&quot;:718,&quot;name&quot;:&quot;基格爾德&quot;},{&quot;id&quot;:719,&quot;name&quot;:&quot;蒂安希&quot;},{&quot;id&quot;:720,&quot;name&quot;:&quot;胡帕&quot;},{&quot;id&quot;:721,&quot;name&quot;:&quot;波爾凱尼恩&quot;},{&quot;id&quot;:722,&quot;name&quot;:&quot;木木梟&quot;},{&quot;id&quot;:723,&quot;name&quot;:&quot;投羽梟&quot;},{&quot;id&quot;:724,&quot;name&quot;:&quot;狙射樹梟&quot;},{&quot;id&quot;:725,&quot;name&quot;:&quot;火斑喵&quot;},{&quot;id&quot;:726,&quot;name&quot;:&quot;炎熱喵&quot;},{&quot;id&quot;:727,&quot;name&quot;:&quot;熾焰咆哮虎&quot;},{&quot;id&quot;:728,&quot;name&quot;:&quot;球球海獅&quot;},{&quot;id&quot;:729,&quot;name&quot;:&quot;花漾海獅&quot;},{&quot;id&quot;:730,&quot;name&quot;:&quot;西獅海壬&quot;},{&quot;id&quot;:731,&quot;name&quot;:&quot;小篤兒&quot;},{&quot;id&quot;:734,&quot;name&quot;:&quot;貓鼬少&quot;},{&quot;id&quot;:736,&quot;name&quot;:&quot;強顎雞母蟲&quot;},{&quot;id&quot;:737,&quot;name&quot;:&quot;蟲電寶&quot;},{&quot;id&quot;:738,&quot;name&quot;:&quot;鍬農炮蟲&quot;},{&quot;id&quot;:739,&quot;name&quot;:&quot;好勝蟹&quot;},{&quot;id&quot;:740,&quot;name&quot;:&quot;好勝毛蟹&quot;},{&quot;id&quot;:741,&quot;name&quot;:&quot;花舞鳥&quot;},{&quot;id&quot;:742,&quot;name&quot;:&quot;萌虻&quot;},{&quot;id&quot;:743,&quot;name&quot;:&quot;蝶結萌虻&quot;},{&quot;id&quot;:744,&quot;name&quot;:&quot;岩狗狗&quot;},{&quot;id&quot;:745,&quot;name&quot;:&quot;鬃岩狼人&quot;},{&quot;id&quot;:746,&quot;name&quot;:&quot;弱丁魚&quot;},{&quot;id&quot;:747,&quot;name&quot;:&quot;好壞星&quot;},{&quot;id&quot;:748,&quot;name&quot;:&quot;超壞星&quot;},{&quot;id&quot;:749,&quot;name&quot;:&quot;泥驢仔&quot;},{&quot;id&quot;:750,&quot;name&quot;:&quot;重泥挽馬&quot;},{&quot;id&quot;:751,&quot;name&quot;:&quot;滴蛛&quot;},{&quot;id&quot;:752,&quot;name&quot;:&quot;滴蛛霸&quot;},{&quot;id&quot;:753,&quot;name&quot;:&quot;偽螳草&quot;},{&quot;id&quot;:754,&quot;name&quot;:&quot;蘭螳花&quot;},{&quot;id&quot;:755,&quot;name&quot;:&quot;睡睡菇&quot;},{&quot;id&quot;:757,&quot;name&quot;:&quot;夜盜火蜥&quot;},{&quot;id&quot;:758,&quot;name&quot;:&quot;焰后蜥&quot;},{&quot;id&quot;:759,&quot;name&quot;:&quot;童偶熊&quot;},{&quot;id&quot;:760,&quot;name&quot;:&quot;穿著熊&quot;},{&quot;id&quot;:761,&quot;name&quot;:&quot;甜竹竹&quot;},{&quot;id&quot;:762,&quot;name&quot;:&quot;甜舞妮&quot;},{&quot;id&quot;:763,&quot;name&quot;:&quot;甜冷美后&quot;},{&quot;id&quot;:764,&quot;name&quot;:&quot;花療環環&quot;},{&quot;id&quot;:766,&quot;name&quot;:&quot;投擲猴&quot;},{&quot;id&quot;:767,&quot;name&quot;:&quot;膽小蟲&quot;},{&quot;id&quot;:768,&quot;name&quot;:&quot;具甲武者&quot;},{&quot;id&quot;:769,&quot;name&quot;:&quot;沙丘娃&quot;},{&quot;id&quot;:770,&quot;name&quot;:&quot;噬沙堡爺&quot;},{&quot;id&quot;:771,&quot;name&quot;:&quot;拳海參&quot;},{&quot;id&quot;:772,&quot;name&quot;:&quot;屬性：空&quot;},{&quot;id&quot;:773,&quot;name&quot;:&quot;銀伴戰獸&quot;},{&quot;id&quot;:774,&quot;name&quot;:&quot;小隕星&quot;},{&quot;id&quot;:775,&quot;name&quot;:&quot;樹枕尾熊&quot;},{&quot;id&quot;:776,&quot;name&quot;:&quot;爆焰龜獸&quot;},{&quot;id&quot;:777,&quot;name&quot;:&quot;托戈德瑪爾&quot;},{&quot;id&quot;:778,&quot;name&quot;:&quot;謎擬Ｑ&quot;},{&quot;id&quot;:779,&quot;name&quot;:&quot;磨牙彩皮魚&quot;},{&quot;id&quot;:780,&quot;name&quot;:&quot;老翁龍&quot;},{&quot;id&quot;:781,&quot;name&quot;:&quot;破破舵輪&quot;},{&quot;id&quot;:782,&quot;name&quot;:&quot;心鱗寶&quot;},{&quot;id&quot;:783,&quot;name&quot;:&quot;鱗甲龍&quot;},{&quot;id&quot;:784,&quot;name&quot;:&quot;杖尾鱗甲龍&quot;},{&quot;id&quot;:785,&quot;name&quot;:&quot;卡璞・鳴鳴&quot;},{&quot;id&quot;:786,&quot;name&quot;:&quot;卡璞・蝶蝶&quot;},{&quot;id&quot;:787,&quot;name&quot;:&quot;卡璞・哞哞&quot;},{&quot;id&quot;:788,&quot;name&quot;:&quot;卡璞・鰭鰭&quot;},{&quot;id&quot;:789,&quot;name&quot;:&quot;科斯莫古&quot;},{&quot;id&quot;:790,&quot;name&quot;:&quot;科斯莫姆&quot;},{&quot;id&quot;:791,&quot;name&quot;:&quot;索爾迦雷歐&quot;},{&quot;id&quot;:792,&quot;name&quot;:&quot;露奈雅拉&quot;},{&quot;id&quot;:793,&quot;name&quot;:&quot;虛吾伊德&quot;},{&quot;id&quot;:794,&quot;name&quot;:&quot;爆肌蚊&quot;},{&quot;id&quot;:795,&quot;name&quot;:&quot;費洛美螂&quot;},{&quot;id&quot;:796,&quot;name&quot;:&quot;電束木&quot;},{&quot;id&quot;:797,&quot;name&quot;:&quot;鐵火輝夜&quot;},{&quot;id&quot;:798,&quot;name&quot;:&quot;紙御劍&quot;},{&quot;id&quot;:799,&quot;name&quot;:&quot;惡食大王&quot;},{&quot;id&quot;:800,&quot;name&quot;:&quot;奈克洛茲瑪&quot;},{&quot;id&quot;:801,&quot;name&quot;:&quot;瑪機雅娜&quot;},{&quot;id&quot;:802,&quot;name&quot;:&quot;瑪夏多&quot;},{&quot;id&quot;:803,&quot;name&quot;:&quot;毒貝比&quot;},{&quot;id&quot;:804,&quot;name&quot;:&quot;四顎針龍&quot;},{&quot;id&quot;:805,&quot;name&quot;:&quot;壘磊石&quot;},{&quot;id&quot;:806,&quot;name&quot;:&quot;砰頭小丑&quot;},{&quot;id&quot;:807,&quot;name&quot;:&quot;捷拉奧拉&quot;},{&quot;id&quot;:808,&quot;name&quot;:&quot;美錄坦&quot;},{&quot;id&quot;:809,&quot;name&quot;:&quot;美錄梅塔&quot;},{&quot;id&quot;:810,&quot;name&quot;:&quot;敲音猴&quot;},{&quot;id&quot;:811,&quot;name&quot;:&quot;啪咚猴&quot;},{&quot;id&quot;:812,&quot;name&quot;:&quot;轟擂金剛猩&quot;},{&quot;id&quot;:813,&quot;name&quot;:&quot;炎兔兒&quot;},{&quot;id&quot;:814,&quot;name&quot;:&quot;騰蹴小將&quot;},{&quot;id&quot;:815,&quot;name&quot;:&quot;閃焰王牌&quot;},{&quot;id&quot;:816,&quot;name&quot;:&quot;淚眼蜥&quot;},{&quot;id&quot;:817,&quot;name&quot;:&quot;變澀蜥&quot;},{&quot;id&quot;:818,&quot;name&quot;:&quot;千面避役&quot;},{&quot;id&quot;:819,&quot;name&quot;:&quot;貪心栗鼠&quot;},{&quot;id&quot;:820,&quot;name&quot;:&quot;藏飽栗鼠&quot;},{&quot;id&quot;:821,&quot;name&quot;:&quot;稚山雀&quot;},{&quot;id&quot;:822,&quot;name&quot;:&quot;藍鴉&quot;},{&quot;id&quot;:823,&quot;name&quot;:&quot;鋼鎧鴉&quot;},{&quot;id&quot;:824,&quot;name&quot;:&quot;索偵蟲&quot;},{&quot;id&quot;:825,&quot;name&quot;:&quot;天罩蟲&quot;},{&quot;id&quot;:826,&quot;name&quot;:&quot;以歐路普&quot;},{&quot;id&quot;:827,&quot;name&quot;:&quot;偷兒狐&quot;},{&quot;id&quot;:828,&quot;name&quot;:&quot;狐大盜&quot;},{&quot;id&quot;:829,&quot;name&quot;:&quot;幼棉棉&quot;},{&quot;id&quot;:830,&quot;name&quot;:&quot;白蓬蓬&quot;},{&quot;id&quot;:831,&quot;name&quot;:&quot;毛辮羊&quot;},{&quot;id&quot;:832,&quot;name&quot;:&quot;毛毛角羊&quot;},{&quot;id&quot;:833,&quot;name&quot;:&quot;咬咬龜&quot;},{&quot;id&quot;:834,&quot;name&quot;:&quot;暴噬龜&quot;},{&quot;id&quot;:835,&quot;name&quot;:&quot;來電汪&quot;},{&quot;id&quot;:836,&quot;name&quot;:&quot;逐電犬&quot;},{&quot;id&quot;:840,&quot;name&quot;:&quot;啃果蟲&quot;},{&quot;id&quot;:841,&quot;name&quot;:&quot;蘋裹龍&quot;},{&quot;id&quot;:842,&quot;name&quot;:&quot;豐蜜龍&quot;},{&quot;id&quot;:843,&quot;name&quot;:&quot;沙包蛇&quot;},{&quot;id&quot;:844,&quot;name&quot;:&quot;沙螺蟒&quot;},{&quot;id&quot;:845,&quot;name&quot;:&quot;古月鳥&quot;},{&quot;id&quot;:846,&quot;name&quot;:&quot;刺梭魚&quot;},{&quot;id&quot;:847,&quot;name&quot;:&quot;戽斗尖梭&quot;},{&quot;id&quot;:848,&quot;name&quot;:&quot;毒電嬰&quot;},{&quot;id&quot;:849,&quot;name&quot;:&quot;顫弦蠑螈&quot;},{&quot;id&quot;:850,&quot;name&quot;:&quot;燒火蚣&quot;},{&quot;id&quot;:851,&quot;name&quot;:&quot;焚焰蚣&quot;},{&quot;id&quot;:852,&quot;name&quot;:&quot;拳拳蛸&quot;},{&quot;id&quot;:853,&quot;name&quot;:&quot;八爪武師&quot;},{&quot;id&quot;:854,&quot;name&quot;:&quot;來悲茶&quot;},{&quot;id&quot;:855,&quot;name&quot;:&quot;怖思壺&quot;},{&quot;id&quot;:856,&quot;name&quot;:&quot;迷布莉姆&quot;},{&quot;id&quot;:857,&quot;name&quot;:&quot;提布莉姆&quot;},{&quot;id&quot;:858,&quot;name&quot;:&quot;布莉姆溫&quot;},{&quot;id&quot;:859,&quot;name&quot;:&quot;搗蛋小妖&quot;},{&quot;id&quot;:860,&quot;name&quot;:&quot;詐唬魔&quot;},{&quot;id&quot;:861,&quot;name&quot;:&quot;長毛巨魔&quot;},{&quot;id&quot;:862,&quot;name&quot;:&quot;堵攔熊&quot;},{&quot;id&quot;:863,&quot;name&quot;:&quot;喵頭目&quot;},{&quot;id&quot;:864,&quot;name&quot;:&quot;魔靈珊瑚&quot;},{&quot;id&quot;:867,&quot;name&quot;:&quot;死神板&quot;},{&quot;id&quot;:868,&quot;name&quot;:&quot;小仙奶&quot;},{&quot;id&quot;:869,&quot;name&quot;:&quot;霜奶仙&quot;},{&quot;id&quot;:871,&quot;name&quot;:&quot;啪嚓海膽&quot;},{&quot;id&quot;:872,&quot;name&quot;:&quot;雪吞蟲&quot;},{&quot;id&quot;:873,&quot;name&quot;:&quot;雪絨蛾&quot;},{&quot;id&quot;:874,&quot;name&quot;:&quot;巨石丁&quot;},{&quot;id&quot;:875,&quot;name&quot;:&quot;冰砌鵝&quot;},{&quot;id&quot;:876,&quot;name&quot;:&quot;愛管侍&quot;},{&quot;id&quot;:877,&quot;name&quot;:&quot;莫魯貝可&quot;},{&quot;id&quot;:880,&quot;name&quot;:&quot;雷鳥龍&quot;},{&quot;id&quot;:881,&quot;name&quot;:&quot;雷鳥海獸&quot;},{&quot;id&quot;:882,&quot;name&quot;:&quot;鰓魚龍&quot;},{&quot;id&quot;:883,&quot;name&quot;:&quot;鰓魚海獸&quot;},{&quot;id&quot;:884,&quot;name&quot;:&quot;鋁鋼龍&quot;},{&quot;id&quot;:885,&quot;name&quot;:&quot;多龍梅西亞&quot;},{&quot;id&quot;:886,&quot;name&quot;:&quot;多龍奇&quot;},{&quot;id&quot;:887,&quot;name&quot;:&quot;多龍巴魯托&quot;},{&quot;id&quot;:888,&quot;name&quot;:&quot;蒼響&quot;},{&quot;id&quot;:889,&quot;name&quot;:&quot;藏瑪然特&quot;},{&quot;id&quot;:890,&quot;name&quot;:&quot;無極汰那&quot;},{&quot;id&quot;:891,&quot;name&quot;:&quot;熊徒弟&quot;},{&quot;id&quot;:892,&quot;name&quot;:&quot;武道熊師&quot;},{&quot;id&quot;:894,&quot;name&quot;:&quot;雷吉艾勒奇&quot;},{&quot;id&quot;:895,&quot;name&quot;:&quot;雷吉鐸拉戈&quot;},{&quot;id&quot;:896,&quot;name&quot;:&quot;雪暴馬&quot;},{&quot;id&quot;:897,&quot;name&quot;:&quot;靈幽馬&quot;},{&quot;id&quot;:898,&quot;name&quot;:&quot;蕾冠王&quot;},{&quot;id&quot;:899,&quot;name&quot;:&quot;詭角鹿&quot;},{&quot;id&quot;:900,&quot;name&quot;:&quot;劈斧螳螂&quot;},{&quot;id&quot;:901,&quot;name&quot;:&quot;月月熊&quot;},{&quot;id&quot;:902,&quot;name&quot;:&quot;幽尾玄魚&quot;},{&quot;id&quot;:903,&quot;name&quot;:&quot;大狃拉&quot;},{&quot;id&quot;:904,&quot;name&quot;:&quot;萬針魚&quot;},{&quot;id&quot;:905,&quot;name&quot;:&quot;眷戀雲&quot;},{&quot;id&quot;:906,&quot;name&quot;:&quot;新葉喵&quot;},{&quot;id&quot;:907,&quot;name&quot;:&quot;蒂蕾喵&quot;},{&quot;id&quot;:908,&quot;name&quot;:&quot;魔幻假面喵&quot;},{&quot;id&quot;:909,&quot;name&quot;:&quot;呆火鱷&quot;},{&quot;id&quot;:910,&quot;name&quot;:&quot;炙燙鱷&quot;},{&quot;id&quot;:911,&quot;name&quot;:&quot;骨紋巨聲鱷&quot;},{&quot;id&quot;:912,&quot;name&quot;:&quot;潤水鴨&quot;},{&quot;id&quot;:913,&quot;name&quot;:&quot;湧躍鴨&quot;},{&quot;id&quot;:914,&quot;name&quot;:&quot;狂歡浪舞鴨&quot;},{&quot;id&quot;:915,&quot;name&quot;:&quot;愛吃豚&quot;},{&quot;id&quot;:916,&quot;name&quot;:&quot;飄香豚&quot;},{&quot;id&quot;:917,&quot;name&quot;:&quot;團珠蛛&quot;},{&quot;id&quot;:918,&quot;name&quot;:&quot;操陷蛛&quot;},{&quot;id&quot;:919,&quot;name&quot;:&quot;豆蟋蟀&quot;},{&quot;id&quot;:920,&quot;name&quot;:&quot;烈腿蝗&quot;},{&quot;id&quot;:921,&quot;name&quot;:&quot;布撥&quot;},{&quot;id&quot;:922,&quot;name&quot;:&quot;布土撥&quot;},{&quot;id&quot;:923,&quot;name&quot;:&quot;巴布土撥&quot;},{&quot;id&quot;:924,&quot;name&quot;:&quot;一對鼠&quot;},{&quot;id&quot;:925,&quot;name&quot;:&quot;一家鼠&quot;},{&quot;id&quot;:926,&quot;name&quot;:&quot;狗仔包&quot;},{&quot;id&quot;:927,&quot;name&quot;:&quot;麻花犬&quot;},{&quot;id&quot;:928,&quot;name&quot;:&quot;迷你芙&quot;},{&quot;id&quot;:930,&quot;name&quot;:&quot;奧利瓦&quot;},{&quot;id&quot;:932,&quot;name&quot;:&quot;鹽石寶&quot;},{&quot;id&quot;:933,&quot;name&quot;:&quot;鹽石壘&quot;},{&quot;id&quot;:934,&quot;name&quot;:&quot;鹽石巨靈&quot;},{&quot;id&quot;:935,&quot;name&quot;:&quot;炭小侍&quot;},{&quot;id&quot;:936,&quot;name&quot;:&quot;紅蓮鎧騎&quot;},{&quot;id&quot;:937,&quot;name&quot;:&quot;蒼炎刃鬼&quot;},{&quot;id&quot;:938,&quot;name&quot;:&quot;光蚪仔&quot;},{&quot;id&quot;:939,&quot;name&quot;:&quot;電肚蛙&quot;},{&quot;id&quot;:940,&quot;name&quot;:&quot;電海燕&quot;},{&quot;id&quot;:941,&quot;name&quot;:&quot;大電海燕&quot;},{&quot;id&quot;:946,&quot;name&quot;:&quot;納噬草&quot;},{&quot;id&quot;:951,&quot;name&quot;:&quot;熱辣娃&quot;},{&quot;id&quot;:952,&quot;name&quot;:&quot;狠辣椒&quot;},{&quot;id&quot;:953,&quot;name&quot;:&quot;蟲滾泥&quot;},{&quot;id&quot;:955,&quot;name&quot;:&quot;飄飄雛&quot;},{&quot;id&quot;:957,&quot;name&quot;:&quot;小鍛匠&quot;},{&quot;id&quot;:958,&quot;name&quot;:&quot;巧鍛匠&quot;},{&quot;id&quot;:959,&quot;name&quot;:&quot;巨鍛匠&quot;},{&quot;id&quot;:960,&quot;name&quot;:&quot;海地鼠&quot;},{&quot;id&quot;:961,&quot;name&quot;:&quot;三海地鼠&quot;},{&quot;id&quot;:963,&quot;name&quot;:&quot;波普海豚&quot;},{&quot;id&quot;:964,&quot;name&quot;:&quot;海豚俠&quot;},{&quot;id&quot;:965,&quot;name&quot;:&quot;噗隆隆&quot;},{&quot;id&quot;:966,&quot;name&quot;:&quot;普隆隆姆&quot;},{&quot;id&quot;:967,&quot;name&quot;:&quot;摩托蜥&quot;},{&quot;id&quot;:968,&quot;name&quot;:&quot;拖拖蚓&quot;},{&quot;id&quot;:969,&quot;name&quot;:&quot;晶光芽&quot;},{&quot;id&quot;:970,&quot;name&quot;:&quot;晶光花&quot;},{&quot;id&quot;:971,&quot;name&quot;:&quot;墓仔狗&quot;},{&quot;id&quot;:972,&quot;name&quot;:&quot;墓揚犬&quot;},{&quot;id&quot;:974,&quot;name&quot;:&quot;走鯨&quot;},{&quot;id&quot;:975,&quot;name&quot;:&quot;浩大鯨&quot;},{&quot;id&quot;:976,&quot;name&quot;:&quot;輕身鱈&quot;},{&quot;id&quot;:977,&quot;name&quot;:&quot;吃吼霸&quot;},{&quot;id&quot;:978,&quot;name&quot;:&quot;米立龍&quot;},{&quot;id&quot;:979,&quot;name&quot;:&quot;棄世猴&quot;},{&quot;id&quot;:980,&quot;name&quot;:&quot;土王&quot;},{&quot;id&quot;:981,&quot;name&quot;:&quot;奇麒麟&quot;},{&quot;id&quot;:982,&quot;name&quot;:&quot;土龍節節&quot;},{&quot;id&quot;:983,&quot;name&quot;:&quot;仆刀將軍&quot;},{&quot;id&quot;:984,&quot;name&quot;:&quot;雄偉牙&quot;},{&quot;id&quot;:985,&quot;name&quot;:&quot;吼叫尾&quot;},{&quot;id&quot;:987,&quot;name&quot;:&quot;振翼髮&quot;},{&quot;id&quot;:988,&quot;name&quot;:&quot;爬地翅&quot;},{&quot;id&quot;:989,&quot;name&quot;:&quot;沙鐵皮&quot;},{&quot;id&quot;:991,&quot;name&quot;:&quot;鐵包袱&quot;},{&quot;id&quot;:992,&quot;name&quot;:&quot;鐵臂膀&quot;},{&quot;id&quot;:994,&quot;name&quot;:&quot;鐵毒蛾&quot;},{&quot;id&quot;:995,&quot;name&quot;:&quot;鐵荊棘&quot;},{&quot;id&quot;:996,&quot;name&quot;:&quot;涼脊龍&quot;},{&quot;id&quot;:997,&quot;name&quot;:&quot;凍脊龍&quot;},{&quot;id&quot;:998,&quot;name&quot;:&quot;戟脊龍&quot;},{&quot;id&quot;:1000,&quot;name&quot;:&quot;賽富豪&quot;},{&quot;id&quot;:1004,&quot;name&quot;:&quot;古玉魚&quot;},{&quot;id&quot;:1005,&quot;name&quot;:&quot;轟鳴月&quot;},{&quot;id&quot;:1006,&quot;name&quot;:&quot;鐵武者&quot;},{&quot;id&quot;:1007,&quot;name&quot;:&quot;故勒頓&quot;},{&quot;id&quot;:1009,&quot;name&quot;:&quot;波盪水&quot;},{&quot;id&quot;:1010,&quot;name&quot;:&quot;鐵斑葉&quot;},{&quot;id&quot;:1011,&quot;name&quot;:&quot;裹蜜蟲&quot;},{&quot;id&quot;:1012,&quot;name&quot;:&quot;斯魔茶&quot;},{&quot;id&quot;:1013,&quot;name&quot;:&quot;來悲粗茶&quot;},{&quot;id&quot;:1015,&quot;name&quot;:&quot;願增猿&quot;},{&quot;id&quot;:1016,&quot;name&quot;:&quot;吉雉雞&quot;},{&quot;id&quot;:1017,&quot;name&quot;:&quot;厄鬼椪&quot;},{&quot;id&quot;:1018,&quot;name&quot;:&quot;鋁鋼橋龍&quot;},{&quot;id&quot;:1019,&quot;name&quot;:&quot;蜜集大蛇&quot;},{&quot;id&quot;:1024,&quot;name&quot;:&quot;太樂巴戈斯&quot;}],&quot;upgrades&quot;:[{&quot;id&quot;:&quot;hp&quot;,&quot;max&quot;:10},{&quot;id&quot;:&quot;atk&quot;,&quot;max&quot;:10},{&quot;id&quot;:&quot;spd&quot;,&quot;max&quot;:8},{&quot;id&quot;:&quot;cd&quot;,&quot;max&quot;:8},{&quot;id&quot;:&quot;def&quot;,&quot;max&quot;:8},{&quot;id&quot;:&quot;regen&quot;,&quot;max&quot;:5},{&quot;id&quot;:&quot;magnet&quot;,&quot;max&quot;:6},{&quot;id&quot;:&quot;xp&quot;,&quot;max&quot;:8},{&quot;id&quot;:&quot;coins&quot;,&quot;max&quot;:8},{&quot;id&quot;:&quot;moves&quot;,&quot;max&quot;:1},{&quot;id&quot;:&quot;crit&quot;,&quot;max&quot;:10},{&quot;id&quot;:&quot;reroll&quot;,&quot;max&quot;:5},{&quot;id&quot;:&quot;ban&quot;,&quot;max&quot;:3},{&quot;id&quot;:&quot;start&quot;,&quot;max&quot;:1}]};
+  const result=await service.write(draft,catalog,&apos;console_safari_v1&apos;);
+  let backedUp=true;
+  try {localStorage.setItem(&apos;ps.console.backup.&apos;+service.user.uid,JSON.stringify(result.backup));localStorage.setItem(&apos;ps.cloudok.&apos;+service.user.uid,String(Date.now()));} catch {backedUp=false;}
+  completion({ok:true,message:&apos;伺服器已回讀確認。請關閉分享面板，重新整理遊戲頁面。&apos;,account:result.save.name,values:saveSummary(result.save,catalog),localBackup:backedUp});
+})().catch(error =&gt; completion({ok:false,message:error.message||&apos;操作未完成&apos;,code:error.code||&apos;&apos;}));
+</string>
+            <key>attachmentsByRange</key>
+            <dict>
+              <key>{253, 1}</key>
+              <dict>
+                <key>Type</key>
+                <string>ActionOutput</string>
+                <key>OutputUUID</key>
+                <string>367D9A2F-A39B-4969-A00D-8264094BC57F</string>
+                <key>OutputName</key>
+                <string>Matches</string>
+              </dict>
+            </dict>
+          </dict>
+          <key>WFSerializationType</key>
+          <string>WFTextTokenString</string>
+        </dict>
+      </dict>
+    </dict>
+    <dict>
+      <key>WFWorkflowActionIdentifier</key>
+      <string>is.workflow.actions.showresult</string>
+      <key>WFWorkflowActionParameters</key>
+      <dict>
+        <key>Text</key>
+        <dict>
+          <key>Value</key>
+          <dict>
+            <key>Type</key>
+            <string>ActionOutput</string>
+            <key>OutputUUID</key>
+            <string>BA88A305-A887-4877-AB32-991AFD48A939</string>
+            <key>OutputName</key>
+            <string>JavaScript Result</string>
+          </dict>
+          <key>WFSerializationType</key>
+          <string>WFTextTokenAttachment</string>
+        </dict>
+      </dict>
+    </dict>
+  </array>
+</dict>
+</plist>

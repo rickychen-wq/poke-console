@@ -12,13 +12,14 @@ The site only creates a data packet containing the operations you selected. You 
 
 ## Use
 
-1. Open the site in Safari. The entire UI is available in **展示模式**, without touching a game account.
-2. Follow the site's **Safari 捷徑設定** instructions. Apple documents the Run JavaScript on Webpage action at <https://support.apple.com/guide/shortcuts/use-the-run-javascript-on-webpage-action-apdb71a01d93/ios>.
-3. Run `shortcut/probe.js` from the game page. `supported`, `gameService` and `signedIn` must all be `true` before continuing.
-4. Create a shortcut with: Get Clipboard → Match Text (`^[0-9]{3,60000}$`) → Run JavaScript on Webpage → Show Result.
-5. The JavaScript action must use the original Safari webpage as its webpage input. Paste `shortcut/run-on-game.js` and replace only `MATCHED_DIGITS_HERE` with the Match Text action's output magic variable, preserving the surrounding quotes. **Never omit the digits-only Match Text step.**
-6. In the website, build your plan, review it, and copy its numeric operation packet.
-7. Switch to the signed-in game main menu, share to the shortcut, and wait for its result. Only `ok: true` represents verified server save success. Refresh the game after success.
+1. In iPhone Safari, download the ready-made [connection test](shortcut/Poke-Connection-Test.shortcut) and [operation shortcut](shortcut/Poke-Console.shortcut). Open the downloads (or use Files → Downloads) and tap **Add Shortcut**. Apple requires the user to confirm adding; the website cannot silently install a shortcut.
+2. On the already-signed-in game main menu, open Safari's share sheet and run **Poké 連線測試** (the imported name may be `Poke-Connection-Test`). `supported`, `gameService` and `signedIn` must all be `true` before continuing. The probe is read-only.
+3. On the website, build your plan, review it, and copy its numeric operation packet.
+4. Switch to the signed-in game main menu, share to **Poké Console** (or `Poke-Console`), and wait for its result. Only `ok: true` represents verified server save success. Refresh the game after success.
+
+The installed shortcut already contains Get Clipboard → Match Text (`^[0-9]{3,60000}$`) → Run JavaScript on Webpage → Show Result. The numeric output is connected as a real magic variable, and the JavaScript action's webpage input is connected to the original Safari webpage. **No manual code editing is required.** The website retains manual setup instructions and source-copy controls as an alternative.
+
+The `.shortcut` files were signed for `anyone` using [Shortcuty's documented signing service](https://github.com/Shortcuty/Signing-Server-API-Documentation). Only the public, generated workflow source was submitted; no game account or authentication data was submitted. `shortcut/signing-manifest.json` records the provider, uploaded-source SHA-256, signed-file SHA-256 and file sizes. Tests reject stale sources or changed downloads. These transport and integrity checks do not replace Apple's import validation or real-device testing.
 
 The shortcut may require the user to enable Allow Running Scripts in iPhone Shortcuts settings and grant access to this game page. The user decides whether to grant this permission. Review the source before enabling it.
 
@@ -57,6 +58,8 @@ Node.js 22+; no dependencies or build installation required.
 npm run dev
 npm run check
 npm test
+# After changing the embedded shortcut source, explicitly re-sign before release:
+npm run sign:shortcuts
 ```
 
 `npm run check` regenerates the self-contained shortcut from the same transformation code used by the planner and demo, then checks syntax, catalog counts, HTML IDs and references. The site is buildless and served from the repository root by GitHub Pages.
@@ -66,7 +69,10 @@ npm test
 - `js/service.js`: game-page-only service adapter and isolated demo/planner adapters.
 - `js/app.js`: UI, queue and preview flow.
 - `data/catalog.json`: 966 supported Pokémon, 87 legendary flags, 14 current upgrade limits; game bundle `1afa081e93`, checked 2026-10-20.
-- `scripts/build-shortcut.mjs`: generates `shortcut/run-on-game.js` and the read-only probe.
+- `scripts/build-shortcut.mjs`: generates the JavaScript, unsigned XML plists and reviewable workflow JSON.
+- `scripts/shortcut-package.mjs`: wires Safari input and UTF-16 magic-variable attachments into deterministic workflow packages.
+- `scripts/sign-shortcuts.mjs`: explicitly uploads only public workflow source to the signing service; validates returned hashes before replacing both downloads.
+- `shortcut/*.shortcut`: signed downloads; `*.unsigned.plist` and `*.workflow.json` are the matching readable sources.
 - `tests/`: ledger tests, identity scoping, moderation preservation, oversized-plan rejection and complete generated-shortcut simulations with an offline fake service.
 
 Automated browser preview access was denied, so no browser-based visual QA or real iPhone Safari test was performed during this run. Programmatic unit tests use synthetic local fixtures and do not access a user's game account.

@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {shortcutPackages,xmlPlist} from './shortcut-package.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const catalog=JSON.parse(fs.readFileSync(path.join(root,'data/catalog.json'),'utf8'));
 const core=fs.readFileSync(path.join(root,'js/core.js'),'utf8').replace(/^export /gm,'');
@@ -34,4 +35,8 @@ fs.mkdirSync(path.join(root,'shortcut'),{recursive:true});
 fs.writeFileSync(path.join(root,'shortcut/run-on-game.js'),runtime);
 const probe=`// Read-only: no save is modified, no credentials are returned.\nconst supported=['pokesurvivor.com','www.pokesurvivor.com'].includes(location.hostname);\nconst available=!!window.firebase && typeof window.firebase.auth==='function';\ncompletion({website:location.hostname,supported,gameService:available,signedIn:available?!!window.firebase.auth().currentUser:false,message:!supported?'請在 .com 遊戲頁執行。':!available?'這個捷徑環境看不到遊戲服務；不要執行寫入指令。':'可讀取遊戲服務。'});\n`;
 fs.writeFileSync(path.join(root,'shortcut/probe.js'),probe);
-console.log('Generated Safari shortcut and read-only probe; no external scripts, credentials or remote login.');
+for(const item of shortcutPackages(probe,runtime)){
+  fs.writeFileSync(path.join(root,'shortcut',item.basename+'.unsigned.plist'),xmlPlist(item.workflow));
+  fs.writeFileSync(path.join(root,'shortcut',item.basename+'.workflow.json'),JSON.stringify(item.workflow,null,2)+'\n');
+}
+console.log('Generated Safari scripts and prewired shortcut plists; no credentials or remote login.');
