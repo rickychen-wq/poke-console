@@ -46,4 +46,3 @@ test('unsupported player interfaces stop before changing any getter',()=>{
   assert.throws(()=>installMultipliers(game,settings),/不相容/);
   assert.equal(Object.getOwnPropertyDescriptor(game.Player.prototype,'atk').get,original.get);
 });
-

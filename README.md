@@ -12,7 +12,7 @@ The game's current cloud save normalization caps supported upgrades, so arbitrar
 
 Game bundle `d2dfaee739` was checked for the DEX/DB/Player-before-Game assignment order. The multiplier core was separately verified against a real paused desktop game and a fresh run: attack ratio 10, speed ratio 5, incoming-damage ratio 0.1. Full document-start injection was not verified in that desktop session because the browser tool does not support registering new-document scripts. Automated tests cover the standalone document-start loader with isolated fixtures, correct account/character scoping, repeated runs, cleanup, runtime conflicts and probe failure modes.
 
-The [compatibility page](https://rickychen-wq.github.io/poke-console/safari-check.html) retains the game's current script CSP. It turns green only when the page's own main-world prototype sees a temporary userscript marker; sharing DOM access or a bridge function from an isolated world does not pass. Passing that page still requires an in-game verified badge, followed by closing/reopening the game tab and checking a new run on the actual iPhone.
+The [compatibility page](https://rickychen-wq.github.io/poke-console/safari-check.html) retains the game's current script CSP. It turns green only when the page's own main-world prototype sees a temporary userscript marker; sharing DOM access or a bridge function from an isolated world does not pass. Passing that page still requires an in-game verified badge, followed by closing/reopening the game tab and checking a new run on the actual iPhone. All 51 automated tests pass. Public-page Chrome checks confirmed no horizontal overflow at actual CSS widths 341 and 385, the setup copy button's success state, and the probe's absent-script timeout with its game link hidden. These are desktop UI checks, not iPhone execution proof.
 
 [Userscripts documents page-injection/CSP limitations](https://github.com/quoid/userscripts/issues/954); its install instructions alone do not establish support for this game. Use an already-installed manager for the probe when possible. Failed probes stop here; no CSP is removed, permissions are not broadened automatically, and the old Shortcuts module test is not retried.
 
@@ -105,7 +105,7 @@ npm run sign:shortcuts
 - `shortcut/*.shortcut`: signed downloads; `*.unsigned.plist` and `*.workflow.json` are the matching readable sources.
 - `tests/`: ledger tests, identity scoping, moderation preservation, oversized-plan rejection and complete generated-shortcut simulations with an offline fake service.
 
-Automated browser preview access was denied, so no automated browser visual QA was performed. User-supplied iPhone screenshots document the service-access failure and native JavaScript timeout. Programmatic unit tests use synthetic local fixtures and do not access a user's game account.
+The earlier planner's local automated preview access was denied. The new Safari setup/probe pages were later checked through the public deployment in Chrome as described above. User-supplied iPhone screenshots document the earlier Shortcut service-access failure and native JavaScript timeout. Programmatic unit tests use synthetic local fixtures and do not access a user's game account.
 
 ## Attribution
 
