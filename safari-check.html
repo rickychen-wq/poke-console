@@ -7,7 +7,7 @@
   <meta http-equiv="Content-Security-Policy" content="script-src 'self' file: https://www.gstatic.com https://apis.google.com https://*.firebaseio.com https://*.firebasedatabase.app; object-src 'none'; base-uri 'self'">
   <link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./assets/iphone.css">
-  <script src="./js/safari-check.js" defer></script>
+  <script src="./js/safari-check.js?v=0.1.1" defer></script>
   <title>Safari 相容性檢查 · Poké Console</title>
 </head>
 <body>
@@ -22,6 +22,14 @@
       <pre id="probe-report" class="probe-report">尚未收到主環境確認</pre>
       <button id="copy-probe-report" class="button secondary" type="button">複製檢查結果</button>
       <p id="copy-result" class="fine" role="status"></p>
+    </section>
+    <section id="content-diagnostic" class="card">
+      <div class="step"><span>檢查</span><p>已安裝，卻沒有倍率按鈕？</p></div>
+      <h2>用只讀診斷區分原因</h2>
+      <p>目前 iPhone 實測未通過。只靠「尚未通過」還不能區分權限問題或網頁限制。這份診斷只在本檢查頁執行，記錄能否執行以及腳本政策事件；不讀取遊戲、帳號或存檔。</p>
+      <a class="button secondary" href="./safari/chen-safari-diagnostic.user.js">開啟「Safari 只讀診斷」腳本 ↗</a>
+      <ol><li>開啟上方腳本網址，從 Safari 頁面選單選 Userscripts，點黃色安裝長條並確認。</li><li>回到本頁，允許 Userscripts 存取此網站，再用 Safari 網址列的箭頭重新整理。</li><li>等待約 10 秒，按上方「複製檢查結果」，貼回對話。</li></ol>
+      <p id="content-diagnostic-state" class="fine" role="status">尚未收到只讀診斷。這份診斷不會調整倍率，也不能讓失敗的主環境檢查自動通過。</p>
     </section>
     <div class="mini-note">通過此頁只代表目前工具能在本檢查頁的主環境執行。遊戲仍需驗證載入時機、超夢實際倍率，以及關閉分頁後重新開局。</div>
     <footer><a href="./iphone.html">回到 iPhone 安裝步驟</a></footer>

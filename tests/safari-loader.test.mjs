@@ -42,12 +42,14 @@ test('does not replace another extension hook',()=>{
 
 function probe(){
   const elements=new Map();
-  for(const id of ['probe','probe-title','probe-description','probe-report','open-game','copy-probe-report','copy-result'])elements.set(id,{dataset:{},hidden:true,addEventListener(){}});
+  for(const id of ['probe','probe-title','probe-description','probe-report','open-game','copy-probe-report','copy-result','content-diagnostic-state'])elements.set(id,{dataset:{},hidden:true,addEventListener(){}});
+  const attributes=new Map();let mutation;
+  const root={getAttribute:name=>attributes.get(name)||null};
   let expire;
-  const context=vm.createContext({document:{getElementById:id=>elements.get(id)},location:{hostname:'rickychen-wq.github.io',pathname:'/poke-console/safari-check.html'},crypto:{randomUUID:()=> 'random-test-token'},setTimeout:fn=>{expire=fn;}});
+  const context=vm.createContext({document:{documentElement:root,getElementById:id=>elements.get(id)},MutationObserver:class{constructor(fn){mutation=fn;}observe(){}},location:{hostname:'rickychen-wq.github.io',pathname:'/poke-console/safari-check.html'},crypto:{randomUUID:()=> 'random-test-token'},setTimeout:fn=>{expire=fn;}});
   vm.runInContext('window=this;self=this;top=this;',context);
   vm.runInContext(fs.readFileSync(new URL('../js/safari-check.js',import.meta.url),'utf8'),context);
-  return {context,elements,expire,env:vm.runInContext('this',context)};
+  return {context,elements,expire,env:vm.runInContext('this',context),receipt(data){attributes.set('data-chen-safari-content-proof',JSON.stringify(data));mutation();}};
 }
 test('probe accepts actual main-realm execution, not merely access to its bridge function',()=>{
   const p=probe();
@@ -68,6 +70,22 @@ test('an isolated script world cannot turn the host probe green through a shared
 test('missing script times out to unconfirmed, never automatic success',()=>{
   const p=probe();p.expire();assert.equal(p.elements.get('probe').dataset.state,'unconfirmed');
   assert.equal(p.elements.get('open-game').hidden,true);
+});
+test('content-world receipt is reported without passing the main-world gate',()=>{
+  const p=probe();p.expire();
+  p.receipt({version:'0.1.0',contentScriptExecuted:true,scriptPolicyHasUnsafeInline:false,blockedInlineScriptEvents:1,observationComplete:true,privateExtra:'must not be exported'});
+  const report=JSON.parse(p.elements.get('probe-report').textContent);
+  assert.equal(report.contentDiagnostic.contentScriptExecuted,true);
+  assert.equal(report.contentDiagnostic.blockedInlineScriptEvents,1);
+  assert.equal(report.mainWorldConfirmed,false);assert.equal(report.status,'unconfirmed');
+  assert.equal(report.contentDiagnostic.privateExtra,undefined);assert.equal(p.elements.get('open-game').hidden,true);
+});
+test('malformed DOM receipts cannot invent main-world success or pollute the copied report',()=>{
+  const p=probe();p.expire();p.receipt({contentScriptExecuted:true,mainWorldConfirmed:true,status:'pass'});
+  let report=JSON.parse(p.elements.get('probe-report').textContent);
+  assert.equal(report.mainWorldConfirmed,false);assert.equal(report.contentDiagnostic,undefined);
+  p.receipt({version:'0.1.0',contentScriptExecuted:true,scriptPolicyHasUnsafeInline:false,blockedInlineScriptEvents:-1,observationComplete:true});
+  report=JSON.parse(p.elements.get('probe-report').textContent);assert.equal(report.contentDiagnostic,undefined);
 });
 test('generated userscript is self contained and scoped to game plus the compatibility page',()=>{
   const script=fs.readFileSync(new URL('../safari/chen0414-mewtwo.user.js',import.meta.url),'utf8');
