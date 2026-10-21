@@ -2,6 +2,20 @@
 
 A Traditional Chinese, mobile-first operation planner for your own PokéSurvivor `.com` save. Hosted on GitHub Pages with no backend and no login form.
 
+## iPhone Safari multiplier compatibility trial (2026-10-21)
+
+Open [the iPhone setup page](https://rickychen-wq.github.io/poke-console/iphone.html). This is a separate userscript experiment, not the retired Shortcuts flow. **An actual iPhone has not passed this route yet.** Do not treat the presence of an install page or passing unit tests as proof of iPhone compatibility, and do not purchase a manager on that assumption.
+
+The self-contained `safari/chen0414-mewtwo.user.js` requests document-start, page/main-world execution. It temporarily observes the game's normal namespace assignment, removes that hook after capture (or a 60-second timeout), and wraps configurable Player getters. Only account `chen0414`'s active Mewtwo (dex 150) receives 10× attack, 5× movement speed and one tenth of ordinary incoming damage. New Player instances use the same wrappers without stacking; disabling restores ordinary getter results. No save fields, auth storage, cloud services or leaderboard writes are used. The browser keeps only an on/off preference.
+
+The game's current cloud save normalization caps supported upgrades, so arbitrary combat multipliers cannot be made into permanent, cross-device account fields. This trial therefore requires an installed browser helper; it does not claim permanent cloud changes.
+
+Game bundle `d2dfaee739` was checked for the DEX/DB/Player-before-Game assignment order. The multiplier core was separately verified against a real paused desktop game and a fresh run: attack ratio 10, speed ratio 5, incoming-damage ratio 0.1. Full document-start injection was not verified in that desktop session because the browser tool does not support registering new-document scripts. Automated tests cover the standalone document-start loader with isolated fixtures, correct account/character scoping, repeated runs, cleanup, runtime conflicts and probe failure modes.
+
+The [compatibility page](https://rickychen-wq.github.io/poke-console/safari-check.html) retains the game's current script CSP. It turns green only when the page's own main-world prototype sees a temporary userscript marker; sharing DOM access or a bridge function from an isolated world does not pass. Passing that page still requires an in-game verified badge, followed by closing/reopening the game tab and checking a new run on the actual iPhone.
+
+[Userscripts documents page-injection/CSP limitations](https://github.com/quoid/userscripts/issues/954); its install instructions alone do not establish support for this game. Use an already-installed manager for the probe when possible. Failed probes stop here; no CSP is removed, permissions are not broadened automatically, and the old Shortcuts module test is not retried.
+
 ## Current status and use
 
 The iPhone route did not pass real-device checks: the initial probe could not see the game service, and the module probe subsequently hit the native Shortcuts JavaScript timeout. **Do not keep retrying phone writes or the module test.** The module-test download now returns a synchronous retirement notice without module imports, timers, login or save access. Already-installed copies do not update automatically; stop using the old copy.
@@ -78,6 +92,8 @@ npm run sign:shortcuts
 - `js/packet.js`: strictly typed, digits-only operation packet encoding/decoding.
 - `js/service.js`: game-page-only service adapter and isolated demo/planner adapters.
 - `js/app.js`: UI, queue and preview flow.
+- `iphone.html`, `safari-check.html`, `assets/iphone.css`: experimental Safari setup and main-world check.
+- `js/safari-{core,capture,bootstrap}.js`: scoped runtime multipliers and document-start loader; `scripts/build-safari.mjs` generates the standalone userscript.
 - `data/catalog.json`: 966 supported Pokémon, 87 legendary flags, 14 current upgrade limits; game bundle `1afa081e93`, checked 2026-10-20.
 - `js/module-probe.js`: experimental reference only; retired from the phone download after a native timeout.
 - `js/desktop.js`: validates and embeds the reviewed numeric packet into the desktop template.

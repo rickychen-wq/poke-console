@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b1222">
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' file: https://www.gstatic.com https://apis.google.com https://*.firebaseio.com https://*.firebasedatabase.app; object-src 'none'; base-uri 'self'">
+  <link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./assets/iphone.css">
+  <script src="./js/safari-check.js" defer></script>
+  <title>Safari 相容性檢查 · Poké Console</title>
+</head>
+<body>
+  <main class="shell">
+    <nav class="topbar"><a href="./iphone.html">← 安裝步驟</a><span class="tag">SAFARI CHECK</span></nav>
+    <header><span class="eyebrow">CHECK BEFORE YOU PLAY</span><h1>先確認，<br><span>真的接得上。</span></h1><p class="intro">此頁使用與遊戲相同的腳本限制，檢查自動腳本是否在網頁主環境執行。不會登入、讀取或修改遊戲存檔。</p></header>
+    <section id="probe" class="card probe" data-state="waiting" aria-live="polite">
+      <div class="probe-icon" aria-hidden="true">⌁</div>
+      <h2 id="probe-title" class="probe-status">等候腳本確認…</h2>
+      <p id="probe-description">確認已安裝「Chen · 超夢自動倍率」，允許擴充套件存取這個網站，再重新整理本頁。</p>
+      <a id="open-game" class="button primary" href="https://pokesurvivor.com/" hidden>檢查通過，前往遊戲 →</a>
+      <pre id="probe-report" class="probe-report">尚未收到主環境確認</pre>
+      <button id="copy-probe-report" class="button secondary" type="button">複製檢查結果</button>
+      <p id="copy-result" class="fine" role="status"></p>
+    </section>
+    <div class="mini-note">通過此頁只代表目前工具能在本檢查頁的主環境執行。遊戲仍需驗證載入時機、超夢實際倍率，以及關閉分頁後重新開局。</div>
+    <footer><a href="./iphone.html">回到 iPhone 安裝步驟</a></footer>
+  </main>
+</body>
+</html>
